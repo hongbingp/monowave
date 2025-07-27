@@ -3,7 +3,11 @@
     "allow": [
       "Bash(find:*)",
       "Bash(sed:*)",
-      "Bash(npx hardhat test:*)"
+      "Bash(npx hardhat test:*)",
+      "Bash(npx hardhat run:*)",
+      "Bash(npm run test:contracts:*)",
+      "Bash(npm test)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

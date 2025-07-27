@@ -45,7 +45,14 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     await connectDB();
-    await connectRedis();
+    
+    // Try to connect to Redis, but don't fail if it's not available
+    try {
+      await connectRedis();
+      logger.info('Redis connected - rate limiting enabled');
+    } catch (redisError) {
+      logger.warn('Redis not available - rate limiting disabled:', redisError.message);
+    }
     
     app.listen(PORT, () => {
       logger.info(`AdChain server running on port ${PORT}`);

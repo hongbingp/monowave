@@ -1,9 +1,11 @@
 const CrawlerService = require('../services/crawler');
+const BlockchainService = require('../services/blockchainService');
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
 const Joi = require('joi');
 
 const crawlerService = new CrawlerService();
+const blockchainService = new BlockchainService();
 
 const crawlSchema = Joi.object({
   urls: Joi.array().items(Joi.string().uri()).min(1).max(10).required(),
@@ -69,7 +71,32 @@ async function crawl(req, res) {
     // Save usage logs
     await saveUsageLogs(usageLogs);
 
-    // Update user balance
+    // Process blockchain charge if available
+    let blockchainResult = null;
+    if (totalCost > 0 && blockchainService.isAvailable()) {
+      // Use the first URL as representative for the charge
+      const firstUrl = urls[0];
+      blockchainResult = await blockchainService.processCrawlCharge(
+        apiKey.id,
+        apiKey.user.walletAddress,
+        firstUrl,
+        totalCost
+      );
+      
+      if (blockchainResult.success) {
+        logger.info('Blockchain charge processed successfully', {
+          apiKeyId: apiKey.id,
+          totalCost,
+          txHash: blockchainResult.txHash
+        });
+      } else {
+        logger.warn('Blockchain charge failed, falling back to local balance update', {
+          error: blockchainResult.error
+        });
+      }
+    }
+
+    // Update user balance (fallback or supplement to blockchain)
     if (totalCost > 0) {
       await updateUserBalance(apiKey.userId, -totalCost);
     }
@@ -89,7 +116,16 @@ async function crawl(req, res) {
       errors: crawlResults.errors,
       billing: {
         totalCost,
-        remainingBalance: apiKey.user.balance - totalCost
+        remainingBalance: apiKey.user.balance - totalCost,
+        blockchain: blockchainResult ? {
+          enabled: blockchainService.isAvailable(),
+          success: blockchainResult.success,
+          txHash: blockchainResult.txHash,
+          blockNumber: blockchainResult.blockNumber
+        } : {
+          enabled: false,
+          message: 'Blockchain service not available'
+        }
       }
     });
 

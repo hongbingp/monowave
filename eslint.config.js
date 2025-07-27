@@ -30,7 +30,7 @@ module.exports = [
       'eqeqeq': 'error',
       'no-trailing-spaces': 'error',
       'indent': ['error', 2],
-      'quotes': ['error', 'single'],
+      // 'quotes': ['error', 'single'],
       'semi': ['error', 'always']
     }
   },

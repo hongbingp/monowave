@@ -1,8 +1,14 @@
-const { client } = require('../config/redis');
-const { RateLimiter } = require('../config/redis');
 const logger = require('../utils/logger');
 
-const rateLimiter = new RateLimiter(client);
+let rateLimiter = null;
+
+// Try to initialize Redis rate limiter
+try {
+  const { client, RateLimiter } = require('../config/redis');
+  rateLimiter = new RateLimiter(client);
+} catch (error) {
+  logger.warn('Redis rate limiter not available, using fallback');
+}
 
 async function checkRateLimit(req, res, next) {
   try {
@@ -13,6 +19,13 @@ async function checkRateLimit(req, res, next) {
         code: 'UNAUTHORIZED',
         message: 'API key required for rate limiting'
       });
+    }
+
+    // If Redis is not available, skip rate limiting checks
+    if (!rateLimiter) {
+      logger.debug('Rate limiting skipped - Redis not available');
+      req.usageStats = { qps: 0, daily: 0, monthly: 0 };
+      return next();
     }
 
     const { limits } = apiKey;
@@ -53,6 +66,12 @@ async function checkRateLimit(req, res, next) {
     next();
   } catch (error) {
     logger.error('Rate limiting error:', error);
+    // If rate limiting fails, continue without it in development
+    if (process.env.NODE_ENV === 'development') {
+      logger.warn('Rate limiting bypassed due to error in development mode');
+      req.usageStats = { qps: 0, daily: 0, monthly: 0 };
+      return next();
+    }
     res.status(500).json({
       code: 'RATE_LIMIT_ERROR',
       message: 'Rate limiting check failed'

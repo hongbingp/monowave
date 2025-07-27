@@ -99,7 +99,11 @@ cache/
 artifacts/
 contracts/cache/
 contracts/artifacts/
+contracts/typechain/
+contracts/typechain-types/
 contracts/deployment.json
+deployment-modular.json
+!deployment-example.json
 
 # Local development
 .env.local

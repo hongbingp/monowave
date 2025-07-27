@@ -1,14 +1,26 @@
-const Web3 = require('web3');
+const { Web3 } = require('web3');
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
 
 class BillingService {
   constructor() {
-    this.web3 = new Web3(process.env.WEB3_PROVIDER_URL);
+    this.web3 = new Web3(process.env.WEB3_PROVIDER_URL || 'http://127.0.0.1:8545');
     this.contractAddress = process.env.CONTRACT_ADDRESS;
     this.privateKey = process.env.PRIVATE_KEY;
-    this.account = this.web3.eth.accounts.privateKeyToAccount(this.privateKey);
-    this.web3.eth.accounts.wallet.add(this.account);
+    
+    // Only initialize account if private key is provided
+    if (this.privateKey && this.privateKey !== '') {
+      try {
+        this.account = this.web3.eth.accounts.privateKeyToAccount(this.privateKey);
+        this.web3.eth.accounts.wallet.add(this.account);
+      } catch (error) {
+        logger.warn('Failed to initialize Web3 account, using simulation mode:', error.message);
+        this.account = null;
+      }
+    } else {
+      logger.warn('No private key provided, using simulation mode');
+      this.account = null;
+    }
   }
 
   async recordBilling(userId, amount, billingPeriod = 'monthly') {
@@ -80,34 +92,37 @@ class BillingService {
     try {
       // This would typically call a smart contract function
       // For now, we'll simulate the blockchain interaction
-      const gasPrice = await this.web3.eth.getGasPrice();
-      const nonce = await this.web3.eth.getTransactionCount(this.account.address);
-      
-      // Simulate contract call
-      const simulatedTx = {
-        from: this.account.address,
-        to: this.contractAddress,
-        value: this.web3.utils.toWei(amount.toString(), 'ether'),
-        gas: 100000,
-        gasPrice: gasPrice,
-        nonce: nonce,
-        data: this.web3.eth.abi.encodeFunctionCall({
-          name: 'charge',
-          type: 'function',
-          inputs: [{
-            type: 'uint256',
-            name: 'apiKeyId'
-          }, {
-            type: 'uint256',
-            name: 'amount'
-          }]
-        }, [apiKeyId, this.web3.utils.toWei(amount.toString(), 'ether')])
-      };
+      if (this.account) {
+        const gasPrice = await this.web3.eth.getGasPrice();
+        const nonce = await this.web3.eth.getTransactionCount(this.account.address);
+        
+        // Simulate contract call
+        const simulatedTx = {
+          from: this.account.address,
+          to: this.contractAddress,
+          value: this.web3.utils.toWei(amount.toString(), 'ether'),
+          gas: 100000,
+          gasPrice: gasPrice,
+          nonce: nonce,
+          data: this.web3.eth.abi.encodeFunctionCall({
+            name: 'charge',
+            type: 'function',
+            inputs: [{
+              type: 'uint256',
+              name: 'apiKeyId'
+            }, {
+              type: 'uint256',
+              name: 'amount'
+            }]
+          }, [apiKeyId, this.web3.utils.toWei(amount.toString(), 'ether')])
+        };
+      }
       
       logger.info('Blockchain charge simulated', {
         apiKeyId,
         amount,
-        txHash: 'simulated_tx_hash'
+        txHash: 'simulated_tx_hash',
+        mode: this.account ? 'web3' : 'fallback'
       });
       
       return 'simulated_tx_hash';
@@ -120,34 +135,37 @@ class BillingService {
   async distributeRevenue(publishers, amounts) {
     try {
       // This would batch distribute revenue to publishers via smart contract
-      const gasPrice = await this.web3.eth.getGasPrice();
-      const nonce = await this.web3.eth.getTransactionCount(this.account.address);
-      
-      // Simulate batch distribution
-      const simulatedTx = {
-        from: this.account.address,
-        to: this.contractAddress,
-        value: '0',
-        gas: 200000,
-        gasPrice: gasPrice,
-        nonce: nonce,
-        data: this.web3.eth.abi.encodeFunctionCall({
-          name: 'distribute',
-          type: 'function',
-          inputs: [{
-            type: 'address[]',
-            name: 'publishers'
-          }, {
-            type: 'uint256[]',
-            name: 'amounts'
-          }]
-        }, [publishers, amounts.map(amount => this.web3.utils.toWei(amount.toString(), 'ether'))])
-      };
+      if (this.account) {
+        const gasPrice = await this.web3.eth.getGasPrice();
+        const nonce = await this.web3.eth.getTransactionCount(this.account.address);
+        
+        // Simulate batch distribution
+        const simulatedTx = {
+          from: this.account.address,
+          to: this.contractAddress,
+          value: '0',
+          gas: 200000,
+          gasPrice: gasPrice,
+          nonce: nonce,
+          data: this.web3.eth.abi.encodeFunctionCall({
+            name: 'distribute',
+            type: 'function',
+            inputs: [{
+              type: 'address[]',
+              name: 'publishers'
+            }, {
+              type: 'uint256[]',
+              name: 'amounts'
+            }]
+          }, [publishers, amounts.map(amount => this.web3.utils.toWei(amount.toString(), 'ether'))])
+        };
+      }
       
       logger.info('Revenue distribution simulated', {
         publisherCount: publishers.length,
         totalAmount: amounts.reduce((sum, amount) => sum + amount, 0),
-        txHash: 'simulated_distribution_tx'
+        txHash: 'simulated_distribution_tx',
+        mode: this.account ? 'web3' : 'fallback'
       });
       
       return 'simulated_distribution_tx';

@@ -38,7 +38,6 @@ cd ADchain
 2. Install dependencies:
 ```bash
 npm install
-cd contracts && npm install
 ```
 
 3. Configure environment:
@@ -83,24 +82,19 @@ npm run dev
 
 ## Smart Contract Deployment
 
-1. Navigate to contracts directory:
+1. Compile contracts:
 ```bash
-cd contracts
+npm run compile
 ```
 
-2. Compile contracts:
+2. Deploy to local network:
 ```bash
-npx hardhat compile
+npm run deploy:localhost
 ```
 
-3. Deploy to local network:
+3. Deploy to testnet/mainnet:
 ```bash
-npx hardhat run scripts/deploy.js --network localhost
-```
-
-4. Deploy to testnet/mainnet:
-```bash
-npx hardhat run scripts/deploy.js --network arbitrum
+npm run deploy:testnet
 ```
 
 ## Usage Examples
