@@ -9,14 +9,14 @@ const axios = require('axios');
 
 const TEST_DATA = {
   aiSearcher: {
-    email: 'test-ai-searcher@adchain.com',
+    email: 'test-ai-searcher@monowave.com',
     password: 'test123456',
     wallet_address: '0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC', // Account #2 from Hardhat
     user_type: 'ai_searcher',
     balance: 100.0 // 100 USDC for testing
   },
   publisher: {
-    email: 'test-publisher@adchain.com',
+    email: 'test-publisher@monowave.com',
     password: 'test123456',
     wallet_address: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8', // Account #1 from Hardhat
     user_type: 'publisher',
@@ -283,7 +283,7 @@ async function checkServerStatus() {
 
 async function runPipelineTest() {
   try {
-    logger.info('🚀 AdChain Crawl Pipeline Test');
+    logger.info('🚀 Monowave Crawl Pipeline Test');
     logger.info('='.repeat(50));
     
     // Check if server is running

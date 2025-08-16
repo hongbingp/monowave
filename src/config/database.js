@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'adchain',
+  database: process.env.DB_NAME || 'monowave',
   user: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'password',
   max: 20,
@@ -59,7 +59,7 @@ async function initializeTables() {
       )
     `);
 
-    // Publishers table - mirrors PublisherRegistry contract
+    // Publishers table - cached from ParticipantRegistry contract (MVP)
     await client.query(`
       CREATE TABLE IF NOT EXISTS publishers (
         id SERIAL PRIMARY KEY,
@@ -77,7 +77,7 @@ async function initializeTables() {
       )
     `);
 
-    // AI Searchers table - mirrors AISearcherRegistry contract
+    // AI Searchers table - cached from ParticipantRegistry contract (MVP)
     await client.query(`
       CREATE TABLE IF NOT EXISTS ai_searchers (
         id SERIAL PRIMARY KEY,
@@ -100,7 +100,7 @@ async function initializeTables() {
       )
     `);
 
-    // Advertisers table - mirrors AdvertiserRegistry contract
+    // Advertisers table - cached from ParticipantRegistry contract (MVP)
     await client.query(`
       CREATE TABLE IF NOT EXISTS advertisers (
         id SERIAL PRIMARY KEY,

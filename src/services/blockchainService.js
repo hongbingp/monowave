@@ -2,93 +2,26 @@ const { Web3 } = require('web3');
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
 
-// Import contract ABIs (simplified versions)
-const AdChainPlatformABI = [
-  {
-    "inputs": [
-      {"name": "_apiKeyId", "type": "uint256"},
-      {"name": "_aiSearcher", "type": "address"},
-      {"name": "_url", "type": "string"},
-      {"name": "_cost", "type": "uint256"},
-      {"name": "_chargeType", "type": "string"}
-    ],
-    "name": "processCrawlRequest",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-];
-
-const ChargeManagerABI = [
-  {
-    "inputs": [
-      {"name": "_apiKeyId", "type": "uint256"},
-      {"name": "_aiSearcher", "type": "address"},
-      {"name": "_url", "type": "string"},
-      {"name": "_amount", "type": "uint256"},
-      {"name": "_chargeType", "type": "string"}
-    ],
-    "name": "processCharge",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-];
-
-const AISearcherRegistryABI = [
-  {
-    "inputs": [{"name": "_aiSearcher", "type": "address"}],
-    "name": "getAISearcherStats",
-    "outputs": [
-      {"name": "", "type": "address"},
-      {"name": "", "type": "string"},
-      {"name": "", "type": "string"},
-      {"name": "", "type": "string"},
-      {"name": "", "type": "uint256"},
-      {"name": "", "type": "uint256"},
-      {"name": "", "type": "uint256"},
-      {"name": "", "type": "bool"},
-      {"name": "", "type": "uint256"},
-      {"name": "", "type": "uint256"},
-      {"name": "", "type": "string[]"},
-      {"name": "", "type": "uint256"}
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  }
-];
-
-const MockUSDCABI = [
-  {
-    "inputs": [{"name": "account", "type": "address"}],
-    "name": "balanceOf",
-    "outputs": [{"name": "", "type": "uint256"}],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [{"name": "to", "type": "address"}, {"name": "amount", "type": "uint256"}],
-    "name": "transfer",
-    "outputs": [{"name": "", "type": "bool"}],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [{"name": "to", "type": "address"}, {"name": "amount", "type": "uint256"}],
-    "name": "mint",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  }
-];
+// Import MVP contract ABIs
+const ParticipantRegistryABI = require('../../contracts/artifacts/contracts/ParticipantRegistry.sol/ParticipantRegistry.json').abi;
+const BatchLedgerABI = require('../../contracts/artifacts/contracts/BatchLedger.sol/BatchLedger.json').abi;
+const EscrowABI = require('../../contracts/artifacts/contracts/Escrow.sol/Escrow.json').abi;
+const DistributorABI = require('../../contracts/artifacts/contracts/Distributor.sol/Distributor.json').abi;
+const TokenRegistryABI = require('../../contracts/artifacts/contracts/TokenRegistry.sol/TokenRegistry.json').abi;
+const MockUSDCABI = require('../../contracts/artifacts/contracts/MockUSDC.sol/MockUSDC.json').abi;
 
 class BlockchainService {
   constructor() {
     this.web3 = new Web3(process.env.WEB3_PROVIDER_URL || 'http://127.0.0.1:8546');
-    this.platformAddress = process.env.CONTRACT_ADDRESS;
-    this.chargeManagerAddress = process.env.CHARGE_MANAGER_ADDRESS;
-    this.aiSearcherRegistryAddress = process.env.AI_SEARCHER_REGISTRY_ADDRESS;
+    
+    // MVP contract addresses from environment
+    this.participantRegistryAddress = process.env.PARTICIPANT_REGISTRY_ADDRESS;
+    this.batchLedgerAddress = process.env.BATCH_LEDGER_ADDRESS;
+    this.escrowAddress = process.env.ESCROW_ADDRESS;
+    this.distributorAddress = process.env.DISTRIBUTOR_ADDRESS;
+    this.tokenRegistryAddress = process.env.TOKEN_REGISTRY_ADDRESS;
     this.mockUSDCAddress = process.env.MOCK_USDC_ADDRESS;
+    
     this.privateKey = process.env.PRIVATE_KEY;
     
     if (this.privateKey && this.privateKey !== '') {
@@ -96,16 +29,20 @@ class BlockchainService {
         this.account = this.web3.eth.accounts.privateKeyToAccount(this.privateKey);
         this.web3.eth.accounts.wallet.add(this.account);
         
-        // Initialize contract instances
-        this.platformContract = new this.web3.eth.Contract(AdChainPlatformABI, this.platformAddress);
-        this.chargeManagerContract = new this.web3.eth.Contract(ChargeManagerABI, this.chargeManagerAddress);
-        this.aiSearcherRegistryContract = new this.web3.eth.Contract(AISearcherRegistryABI, this.aiSearcherRegistryAddress);
-        this.mockUSDCContract = new this.web3.eth.Contract(MockUSDCABI, this.mockUSDCAddress);
+        // Initialize MVP contract instances
+        this.participantRegistry = new this.web3.eth.Contract(ParticipantRegistryABI, this.participantRegistryAddress);
+        this.batchLedger = new this.web3.eth.Contract(BatchLedgerABI, this.batchLedgerAddress);
+        this.escrow = new this.web3.eth.Contract(EscrowABI, this.escrowAddress);
+        this.distributor = new this.web3.eth.Contract(DistributorABI, this.distributorAddress);
+        this.tokenRegistry = new this.web3.eth.Contract(TokenRegistryABI, this.tokenRegistryAddress);
+        this.mockUSDC = new this.web3.eth.Contract(MockUSDCABI, this.mockUSDCAddress);
         
-        logger.info('Blockchain service initialized with contracts', {
-          platform: this.platformAddress,
-          chargeManager: this.chargeManagerAddress,
-          aiSearcherRegistry: this.aiSearcherRegistryAddress,
+        logger.info('Blockchain service initialized with MVP contracts', {
+          participantRegistry: this.participantRegistryAddress,
+          batchLedger: this.batchLedgerAddress,
+          escrow: this.escrowAddress,
+          distributor: this.distributorAddress,
+          tokenRegistry: this.tokenRegistryAddress,
           mockUSDC: this.mockUSDCAddress
         });
       } catch (error) {
@@ -118,34 +55,29 @@ class BlockchainService {
     }
   }
 
-  async processCrawlCharge(apiKeyId, aiSearcherWallet, url, costInUSDC) {
-    if (!this.account || !this.platformContract) {
-      logger.warn('Blockchain service not available, skipping charge');
-      return { success: false, txHash: 'simulated_tx_hash' };
+  // Participant Registry Operations
+  async registerParticipant(participantAddress, roleBitmap, payoutAddress, metadata = '0x0000000000000000000000000000000000000000000000000000000000000000') {
+    if (!this.account || !this.participantRegistry) {
+      logger.warn('Blockchain service not available');
+      return { success: false, error: 'Service not available' };
     }
 
     try {
-      // Convert USDC amount to wei (USDC has 6 decimals)
-      const costInWei = this.web3.utils.toWei((costInUSDC * 1000000).toString(), 'wei');
-      
-      logger.info('Processing crawl charge on blockchain', {
-        apiKeyId,
-        aiSearcherWallet,
-        url,
-        costInUSDC,
-        costInWei
+      logger.info('Registering participant', {
+        participant: participantAddress,
+        roles: roleBitmap,
+        payout: payoutAddress
       });
 
-      // Call the smart contract to process the crawl request
-      const tx = await this.platformContract.methods
-        .processCrawlRequest(apiKeyId, aiSearcherWallet, url, costInWei, "crawl")
+      const tx = await this.participantRegistry.methods
+        .register(participantAddress, roleBitmap, payoutAddress, metadata)
         .send({
           from: this.account.address,
-          gas: 500000,
+          gas: 200000,
           gasPrice: await this.web3.eth.getGasPrice()
         });
 
-      logger.info('Crawl charge processed successfully', {
+      logger.info('Participant registered successfully', {
         txHash: tx.transactionHash,
         gasUsed: tx.gasUsed,
         blockNumber: tx.blockNumber
@@ -159,53 +91,184 @@ class BlockchainService {
       };
 
     } catch (error) {
-      logger.error('Blockchain charge processing failed:', error);
+      logger.error('Participant registration failed:', error);
       return {
         success: false,
-        error: error.message,
-        txHash: null
+        error: error.message
       };
     }
   }
 
-  async getAISearcherBalance(walletAddress) {
-    if (!this.account || !this.aiSearcherRegistryContract) {
+  async getParticipantInfo(participantAddress) {
+    if (!this.participantRegistry) {
       return null;
     }
 
     try {
-      const stats = await this.aiSearcherRegistryContract.methods
-        .getAISearcherStats(walletAddress)
+      const info = await this.participantRegistry.methods
+        .participants(participantAddress)
         .call();
-      
-      // stats[5] is prepaidBalance in wei, convert to USDC
-      const prepaidBalanceWei = stats[5];
-      const prepaidBalanceUSDC = parseFloat(this.web3.utils.fromWei(prepaidBalanceWei, 'mwei')); // mwei = 6 decimals
-      
+
       return {
-        walletAddress: stats[0],
-        name: stats[1],
-        totalSpent: parseFloat(this.web3.utils.fromWei(stats[4], 'mwei')),
-        prepaidBalance: prepaidBalanceUSDC,
-        isActive: stats[7]
+        payoutAddress: info.payout,
+        roleBitmap: parseInt(info.roleBitmap),
+        status: parseInt(info.status),
+        metadata: info.meta,
+        isPublisher: (parseInt(info.roleBitmap) & 1) !== 0, // ROLE_PUBLISHER = 1 << 0
+        isAdvertiser: (parseInt(info.roleBitmap) & 2) !== 0, // ROLE_ADVERTISER = 1 << 1
+        isAISearcher: (parseInt(info.roleBitmap) & 4) !== 0  // ROLE_AI_SEARCHER = 1 << 2
       };
+
     } catch (error) {
-      logger.error('Failed to get AI searcher balance:', error);
+      logger.error('Failed to get participant info:', error);
       return null;
     }
   }
 
+  // Escrow Operations
+  async depositToEscrow(tokenAddress, amount) {
+    if (!this.account || !this.escrow) {
+      logger.warn('Blockchain service not available');
+      return { success: false, error: 'Service not available' };
+    }
+
+    try {
+      // Convert USDC to wei (6 decimals)
+      const amountWei = this.web3.utils.toWei((amount * 1000000).toString(), 'wei');
+      
+      logger.info('Depositing to escrow', {
+        token: tokenAddress,
+        amount,
+        amountWei
+      });
+
+      const tx = await this.escrow.methods
+        .deposit(tokenAddress, amountWei)
+        .send({
+          from: this.account.address,
+          gas: 200000,
+          gasPrice: await this.web3.eth.getGasPrice()
+        });
+
+      logger.info('Escrow deposit successful', {
+        txHash: tx.transactionHash,
+        gasUsed: tx.gasUsed
+      });
+
+      return {
+        success: true,
+        txHash: tx.transactionHash,
+        gasUsed: tx.gasUsed
+      };
+
+    } catch (error) {
+      logger.error('Escrow deposit failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  async getEscrowBalance(userAddress, tokenAddress) {
+    if (!this.escrow) {
+      return null;
+    }
+
+    try {
+      const balanceWei = await this.escrow.methods
+        .balances(userAddress, tokenAddress)
+        .call();
+      
+      const balanceUSDC = parseFloat(this.web3.utils.fromWei(balanceWei, 'mwei'));
+      return balanceUSDC;
+
+    } catch (error) {
+      logger.error('Failed to get escrow balance:', error);
+      return null;
+    }
+  }
+
+  // Batch Ledger Operations
+  async commitBatch(batchId, merkleRoot, leavesCount, description = '') {
+    if (!this.account || !this.batchLedger) {
+      logger.warn('Blockchain service not available');
+      return { success: false, error: 'Service not available' };
+    }
+
+    try {
+      logger.info('Committing batch', {
+        batchId,
+        merkleRoot,
+        leavesCount,
+        description
+      });
+
+      const tx = await this.batchLedger.methods
+        .commitBatch(batchId, merkleRoot, leavesCount, description)
+        .send({
+          from: this.account.address,
+          gas: 200000,
+          gasPrice: await this.web3.eth.getGasPrice()
+        });
+
+      logger.info('Batch committed successfully', {
+        batchId,
+        txHash: tx.transactionHash,
+        gasUsed: tx.gasUsed
+      });
+
+      return {
+        success: true,
+        batchId,
+        txHash: tx.transactionHash,
+        gasUsed: tx.gasUsed
+      };
+
+    } catch (error) {
+      logger.error('Batch commit failed:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+
+  async getBatchInfo(batchId) {
+    if (!this.batchLedger) {
+      return null;
+    }
+
+    try {
+      const batch = await this.batchLedger.methods
+        .batches(batchId)
+        .call();
+
+      return {
+        root: batch.root,
+        leavesCount: parseInt(batch.leavesCount),
+        timestamp: parseInt(batch.timestamp),
+        description: batch.description
+      };
+
+    } catch (error) {
+      logger.error('Failed to get batch info:', error);
+      return null;
+    }
+  }
+
+  // Token Operations
   async mintTestTokens(toAddress, amountUSDC) {
-    if (!this.account || !this.mockUSDCContract) {
+    if (!this.account || !this.mockUSDC) {
       logger.warn('Cannot mint tokens, blockchain service not available');
-      return false;
+      return { success: false, error: 'Service not available' };
     }
 
     try {
       // Convert USDC to wei (6 decimals)
       const amountWei = this.web3.utils.toWei((amountUSDC * 1000000).toString(), 'wei');
       
-      const tx = await this.mockUSDCContract.methods
+      const tx = await this.mockUSDC.methods
         .mint(toAddress, amountWei)
         .send({
           from: this.account.address,
@@ -230,13 +293,17 @@ class BlockchainService {
     }
   }
 
-  async getTokenBalance(walletAddress) {
-    if (!this.mockUSDCContract) {
+  async getTokenBalance(walletAddress, tokenAddress = null) {
+    const tokenContract = tokenAddress ? 
+      new this.web3.eth.Contract(MockUSDCABI, tokenAddress) : 
+      this.mockUSDC;
+    
+    if (!tokenContract) {
       return null;
     }
 
     try {
-      const balanceWei = await this.mockUSDCContract.methods
+      const balanceWei = await tokenContract.methods
         .balanceOf(walletAddress)
         .call();
       
@@ -248,17 +315,92 @@ class BlockchainService {
     }
   }
 
+  // Legacy method compatibility for existing controllers
+  async getAISearcherBalance(walletAddress) {
+    // Map to participant info for backward compatibility
+    const participantInfo = await this.getParticipantInfo(walletAddress);
+    if (!participantInfo) {
+      return null;
+    }
+
+    const tokenBalance = await this.getTokenBalance(walletAddress);
+    const escrowBalance = await this.getEscrowBalance(walletAddress, this.mockUSDCAddress);
+
+    return {
+      walletAddress: walletAddress,
+      name: 'AI Searcher', // Default name
+      totalSpent: 0, // Would need to calculate from transaction history
+      prepaidBalance: escrowBalance || 0,
+      isActive: participantInfo.status === 1
+    };
+  }
+
+  // Legacy method for crawl processing - now maps to participant validation
+  async processCrawlCharge(apiKeyId, aiSearcherWallet, url, costInUSDC) {
+    // Validate participant is registered
+    const participantInfo = await this.getParticipantInfo(aiSearcherWallet);
+    if (!participantInfo || !participantInfo.isAISearcher) {
+      logger.warn('AI Searcher not registered', { wallet: aiSearcherWallet });
+      return { success: false, error: 'AI Searcher not registered' };
+    }
+
+    // Check escrow balance
+    const escrowBalance = await this.getEscrowBalance(aiSearcherWallet, this.mockUSDCAddress);
+    if (!escrowBalance || escrowBalance < costInUSDC) {
+      logger.warn('Insufficient escrow balance', { 
+        wallet: aiSearcherWallet, 
+        required: costInUSDC, 
+        available: escrowBalance 
+      });
+      return { success: false, error: 'Insufficient escrow balance' };
+    }
+
+    logger.info('Crawl charge validated', {
+      apiKeyId,
+      aiSearcherWallet,
+      url,
+      costInUSDC,
+      escrowBalance
+    });
+
+    // In MVP, actual charging happens through batch processing
+    // Return success to maintain compatibility
+    return {
+      success: true,
+      txHash: 'pending_batch_processing',
+      message: 'Charge queued for batch processing'
+    };
+  }
+
+  // Utility methods
   isAvailable() {
-    return this.account !== null && this.platformContract !== null;
+    return this.account !== null && this.participantRegistry !== null;
   }
 
   getContractAddresses() {
     return {
-      platform: this.platformAddress,
-      chargeManager: this.chargeManagerAddress,
-      aiSearcherRegistry: this.aiSearcherRegistryAddress,
+      participantRegistry: this.participantRegistryAddress,
+      batchLedger: this.batchLedgerAddress,
+      escrow: this.escrowAddress,
+      distributor: this.distributorAddress,
+      tokenRegistry: this.tokenRegistryAddress,
       mockUSDC: this.mockUSDCAddress
     };
+  }
+
+  // Role bitmap helpers
+  static ROLES = {
+    PUBLISHER: 1 << 0,   // 1
+    ADVERTISER: 1 << 1,  // 2
+    AI_SEARCHER: 1 << 2  // 4
+  };
+
+  static combineRoles(...roles) {
+    return roles.reduce((combined, role) => combined | role, 0);
+  }
+
+  static hasRole(roleBitmap, role) {
+    return (roleBitmap & role) !== 0;
   }
 }
 

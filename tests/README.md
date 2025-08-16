@@ -1,241 +1,444 @@
-# AdChain Test Suite
+# Monowave MVP Test Suite
 
-Comprehensive testing suite for the AdChain platform including unit tests, integration tests, and smart contract tests.
+Comprehensive testing suite for the Monowave MVP platform including unit tests, integration tests, smart contract tests, and end-to-end validation.
 
-## Test Structure
+## 🧪 Test Architecture
+
+### MVP Test Structure
 
 ```
 tests/
-├── setup.js                    # Test environment setup
-├── testRunner.js               # Test runner script
-├── unit/                       # Unit tests
-│   ├── auth.test.js           # Authentication service tests
-│   ├── crawler.test.js        # Crawler service tests
-│   ├── billing.test.js        # Billing service tests
-│   ├── rateLimit.test.js      # Rate limiting tests
-│   └── database.test.js       # Database operations tests
-├── integration/               # Integration tests
-│   └── api.test.js           # API endpoint tests
-└── contracts/                 # Smart contract tests
-    ├── AdChainContract.test.js
-    └── MockUSDC.test.js
+├── setup.js                           # Test environment setup
+├── testRunner.js                      # Test runner script
+├── unit/                              # Unit tests
+│   ├── MVP Tests (Current)
+│   │   ├── auth.test.js              # Authentication service tests
+│   │   ├── database.test.js          # Database operations (MVP enhanced)
+│   │   ├── blockchainSyncService.test.js  # NEW: Blockchain sync service
+│   │   ├── configService.test.js     # NEW: MVP configuration service
+│   │   ├── adTransactionService.test.js   # Updated for BatchLedger
+│   │   ├── rateLimit.test.js         # Rate limiting tests
+│   │   ├── simple.test.js            # Basic functionality tests
+│   │   └── utils.test.js             # Utility function tests
+│   ├── Legacy Tests (Reference Only)
+│   │   ├── adTransactionService.legacy.test.js
+│   │   ├── revenueService.legacy.test.js
+│   │   ├── billing.legacy.test.js
+│   │   └── LEGACY_TESTS_README.md    # Legacy test documentation
+├── integration/                       # Integration tests
+│   ├── api.test.js                   # API endpoint tests (MVP enhanced)
+│   ├── mvp-integration.test.js       # NEW: End-to-end MVP validation
+│   └── setup.js                      # Integration test setup
+└── contracts/                        # Smart contract tests
+    ├── MVP Contract Tests
+    │   ├── test_mvp/                 # NEW: MVP-specific tests
+    │   │   ├── BatchLedger.test.js   # Batch idempotency tests
+    │   │   ├── Distributor.claim.test.js    # Merkle claim tests
+    │   │   ├── Distributor.dispute.test.js  # Dispute resolution tests
+    │   │   └── TokenRegistry.limits.test.js # Token limit tests
+    │   ├── AccessControl.test.js     # Updated for MVP roles
+    │   └── MockUSDC.test.js         # Test token functionality
+    └── Legacy Contract Tests
+        └── AccessControl.legacy.test.js     # Reference only
 ```
 
-## Running Tests
+## 🚀 Running Tests
 
 ### Prerequisites
 
-1. **Database Setup**: PostgreSQL test database
+1. **Node.js 18+** with npm
+2. **PostgreSQL 14+** test database
+3. **Redis 6+** server running
+4. **Hardhat** for smart contract testing
+
+### Environment Setup
+
+1. **Database Setup**:
    ```bash
-   createdb adchain_test
+   # Create test database
+   createdb monowave_test
+   
+   # Run MVP migrations
+   npm run migrate:mvp
    ```
 
-2. **Redis Setup**: Redis server running on localhost:6379
+2. **Environment Configuration**:
+   ```bash
+   # Copy environment template
+   cp env.template .env
+   
+   # Configure test settings
+   export NODE_ENV=test
+   export DB_NAME_TEST=monowave_test
+   ```
 
-3. **Environment Variables**: Copy `.env.example` to `.env` and configure test settings
+3. **Redis Setup**:
+   ```bash
+   # Start Redis server
+   redis-server
+   ```
 
-### Test Commands
+### MVP Test Commands
 
+#### Smart Contract Tests
 ```bash
-# Run all tests
-npm test
+# Run all MVP contract tests
+npm run test:contracts:mvp
 
-# Run only unit tests
-npm run test:unit
+# Run specific MVP contract test
+npx hardhat test contracts/test_mvp/BatchLedger.test.js --config contracts/hardhat.config.js
 
-# Run only integration tests
+# Run updated AccessControl test
+npx hardhat test contracts/test/AccessControl.test.js --config contracts/hardhat.config.js
+```
+
+#### Backend Service Tests
+```bash
+# Run current MVP tests (excluding legacy)
+npm run test:unit:current
+
+# Run all MVP tests (contracts + backend)
+npm run test:mvp
+
+# Run legacy tests (reference only)
+npm run test:unit:legacy
+
+# Run specific service test
+npx jest tests/unit/blockchainSyncService.test.js
+```
+
+#### Integration Tests
+```bash
+# Run MVP end-to-end integration test
+npx jest tests/integration/mvp-integration.test.js
+
+# Run API integration tests
 npm run test:integration
 
-# Run smart contract tests
-npm run test:contracts
+# Run all integration tests
+npx jest tests/integration/
+```
 
-# Run tests in watch mode
-npm run test:watch
+#### Complete Test Suite
+```bash
+# Run all MVP tests
+npm run test:all
 
-# Generate coverage report
+# Run with coverage
 npm run test:coverage
 
-# Run full test suite with custom runner
-node tests/testRunner.js
+# Watch mode for development
+npm run test:watch
 ```
 
-## Test Categories
+## 📊 Test Coverage
 
-### Unit Tests
+### MVP Contract Test Coverage
 
-**Authentication Tests** (`auth.test.js`)
-- API key generation and validation
-- JWT token operations
-- Password hashing and verification
-- Database operations for auth
+| Contract | Tests | Coverage | Status |
+|----------|-------|----------|--------|
+| **BatchLedger** | Idempotency | ✅ | Complete |
+| **Distributor** | Claims + Disputes | ✅ | Complete |
+| **TokenRegistry** | Limits enforcement | ✅ | Complete |
+| **AccessControl** | MVP roles | ✅ | Complete |
+| **MockUSDC** | ERC20 functionality | ✅ | Complete |
 
-**Crawler Tests** (`crawler.test.js`)
-- URL validation
-- Content extraction (raw, summary, structured)
-- Error handling for network issues
-- HTML parsing and data extraction
+### Backend Service Test Coverage
 
-**Billing Tests** (`billing.test.js`)
-- Payment processing
-- Blockchain integration simulation
-- Usage statistics calculation
-- Revenue distribution
+| Service | Tests | Coverage | Status |
+|---------|-------|----------|--------|
+| **blockchainSyncService** | Sync operations | ✅ | Complete |
+| **configService** | Configuration management | ✅ | Complete |
+| **adTransactionService** | BatchLedger integration | ✅ | Updated |
+| **auth** | Authentication | ✅ | Current |
+| **database** | MVP tables | ✅ | Enhanced |
+| **rateLimit** | Rate limiting | ✅ | Current |
+| **utils** | Utility functions | ✅ | Current |
 
-**Rate Limiting Tests** (`rateLimit.test.js`)
-- QPS, daily, and monthly limits
-- Redis-based rate limiting
-- Usage statistics tracking
-- Middleware functionality
+### Integration Test Coverage
 
-**Database Tests** (`database.test.js`)
-- CRUD operations for all tables
-- Transaction handling
-- Constraint violations
-- Connection management
+| Test Suite | Scope | Status |
+|------------|-------|--------|
+| **mvp-integration** | End-to-end validation | ✅ 20/20 tests passing |
+| **api** | API endpoints | ⚠️ Needs MVP updates |
 
-### Integration Tests
+## 🧪 Test Categories
 
-**API Integration Tests** (`api.test.js`)
-- Full API endpoint testing
-- Authentication flows
-- Request/response validation
-- Database integration
-- Error handling
+### 1. Unit Tests
 
-### Smart Contract Tests
+#### Current MVP Tests
+- **Purpose**: Test individual components in isolation
+- **Scope**: Services, utilities, database operations
+- **Mocking**: External dependencies mocked
+- **Speed**: Fast execution (< 2 seconds)
 
-**AdChainContract Tests**
-- Contract deployment and configuration
-- Access control mechanisms
-- Charging and distribution functions
-- Publisher management
-- Emergency functions
+#### Legacy Tests (Reference Only)
+- **Purpose**: Historical reference for old architecture
+- **Status**: Not actively maintained
+- **Location**: `*.legacy.test.js` files
+- **Usage**: Reference for understanding old system
 
-**MockUSDC Tests**
-- ERC20 token functionality
-- Minting and transfers
-- Decimal handling
-- Edge cases
+### 2. Integration Tests
 
-## Test Configuration
+#### MVP Integration Test
+- **Purpose**: End-to-end system validation
+- **Scope**: Contract deployment, service integration, configuration
+- **Coverage**: 20 comprehensive tests
+- **Execution Time**: ~2.6 seconds
 
-### Jest Configuration (`jest.config.js`)
-- Node.js environment
-- Test timeout: 30 seconds
-- Coverage collection from `src/` directory
-- Setup file for test initialization
+#### API Integration Tests
+- **Purpose**: Test API endpoints with real dependencies
+- **Scope**: HTTP requests, database interactions, blockchain calls
+- **Status**: Being updated for MVP
 
-### Test Database
-- Separate test database (`adchain_test`)
-- Automatic table creation and cleanup
-- Isolation between test runs
+### 3. Smart Contract Tests
 
-### Test Data
-- Automatic test data generation
-- Cleanup after each test
-- Isolated test environment
+#### MVP Contract Tests
+- **Framework**: Hardhat + Chai + Ethers.js
+- **Network**: Local Hardhat network
+- **Coverage**: Core MVP functionality
+- **Gas Reporting**: Included in test output
 
-## Coverage Reports
+#### Test Scenarios
+- **Batch Idempotency**: Prevent duplicate batch IDs
+- **Merkle Claims**: Verify claim bitmap and proofs
+- **Dispute Resolution**: Test dispute windows and reversals
+- **Token Limits**: Enforce single and daily limits
+- **Role Management**: MVP role assignment and checking
 
-Coverage reports are generated in the `coverage/` directory:
-- HTML report: `coverage/lcov-report/index.html`
-- Terminal summary during test runs
-- Target: >80% code coverage
+## 📝 Test Examples
 
-## Mock Services
+### Running Specific Tests
 
-### External Dependencies
-- Axios HTTP client mocked
-- Web3 blockchain interactions mocked
-- Redis client operations mocked
-- Database connections mocked in unit tests
-
-### Test Utilities
-- Custom matchers for API responses
-- Database seeding helpers
-- Mock data generators
-
-## Best Practices
-
-### Test Organization
-- One test file per source file
-- Descriptive test names
-- Grouped related tests with `describe` blocks
-- Clear arrange-act-assert pattern
-
-### Test Data
-- Use factory functions for test data
-- Clean up after each test
-- Avoid hardcoded values
-- Use meaningful test data
-
-### Assertions
-- Specific assertions over generic ones
-- Test both success and failure cases
-- Verify side effects
-- Check error messages and codes
-
-### Performance
-- Keep tests fast and focused
-- Use mocks for external dependencies
-- Parallel test execution where possible
-- Timeout handling for async operations
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Errors**
-   - Ensure PostgreSQL is running
-   - Check database credentials in `.env`
-   - Verify test database exists
-
-2. **Redis Connection Errors**
-   - Ensure Redis server is running
-   - Check Redis configuration
-   - Verify connection settings
-
-3. **Test Timeouts**
-   - Increase timeout in Jest config
-   - Check for hanging promises
-   - Verify cleanup in afterEach hooks
-
-4. **Contract Tests Failing**
-   - Ensure Hardhat network is running
-   - Check contract compilation
-   - Verify mock token deployment
-
-### Debug Mode
 ```bash
-# Run tests with debug output
-DEBUG=* npm test
+# Test batch processing
+npx hardhat test contracts/test_mvp/BatchLedger.test.js
 
-# Run specific test file
-npm test -- tests/unit/auth.test.js
+# Test Merkle claims
+npx hardhat test contracts/test_mvp/Distributor.claim.test.js
 
-# Run tests with verbose output
-npm test -- --verbose
+# Test blockchain sync service
+npx jest tests/unit/blockchainSyncService.test.js
+
+# Test MVP configuration
+npx jest tests/unit/configService.test.js
 ```
 
-## CI/CD Integration
+### Test Output Examples
 
-The test suite is designed to work with CI/CD pipelines:
+#### MVP Contract Test Output
+```
+  BatchLedger - idempotent commits
+    ✓ rejects duplicate batchId (414ms)
+
+  Distributor - claim bitmap & dispute window
+    ✓ prevents double-claim and enforces window before settle (45ms)
+
+  Distributor - dispute window
+    ✓ allows dispute within window and reverse adjustments
+
+  TokenRegistry - limits
+    ✓ enforces single and daily limits
+
+  4 passing (508ms)
+```
+
+#### Integration Test Output
+```
+  MVP End-to-End Integration
+    Contract Compilation and Deployment
+      ✓ should have compiled all MVP contracts (1 ms)
+      ✓ should be able to deploy MVP contracts to local network (1565 ms)
+    MVP Contract Tests
+      ✓ should pass all MVP contract tests (711 ms)
+    [... 17 more tests ...]
+
+  20 passing (2.61s)
+```
+
+## 🔧 Test Configuration
+
+### Jest Configuration (jest.config.js)
+```javascript
+module.exports = {
+  testEnvironment: 'node',
+  testMatch: [
+    '**/tests/unit/**/*.test.js',
+    '**/tests/integration/**/*.test.js'
+  ],
+  testPathIgnorePatterns: [
+    'node_modules/',
+    'contracts/',
+    '.*\\.legacy\\.test\\.js$'  // Ignore legacy tests by default
+  ],
+  collectCoverageFrom: [
+    'src/**/*.js',
+    '!src/**/*.test.js'
+  ],
+  setupFilesAfterEnv: ['<rootDir>/tests/setup.js']
+};
+```
+
+### Hardhat Test Configuration
+```javascript
+// contracts/hardhat.config.js
+module.exports = {
+  solidity: "0.8.25",
+  networks: {
+    hardhat: {
+      chainId: 1337,
+      allowUnlimitedContractSize: true
+    }
+  },
+  mocha: {
+    timeout: 60000
+  }
+};
+```
+
+## 🚨 Test Debugging
+
+### Common Issues and Solutions
+
+#### 1. Contract Compilation Errors
+```bash
+# Clean and recompile
+npm run clean
+npm run compile
+```
+
+#### 2. Database Connection Issues
+```bash
+# Check database exists
+psql -l | grep monowave_test
+
+# Reset test database
+dropdb monowave_test && createdb monowave_test
+npm run migrate:mvp
+```
+
+#### 3. Redis Connection Issues
+```bash
+# Check Redis status
+redis-cli ping
+
+# Start Redis if not running
+redis-server
+```
+
+#### 4. Legacy Test Failures
+```bash
+# Run only current tests
+npm run test:unit:current
+
+# Skip legacy tests
+npx jest --testPathIgnorePatterns="legacy"
+```
+
+### Test Debugging Commands
+
+```bash
+# Run single test with debugging
+npx jest tests/unit/configService.test.js --verbose
+
+# Run contract test with gas reporting
+npx hardhat test contracts/test_mvp/BatchLedger.test.js --gas-reporter
+
+# Run integration test with full output
+npx jest tests/integration/mvp-integration.test.js --verbose --no-coverage
+```
+
+## 📈 Continuous Integration
+
+### GitHub Actions Workflow
 
 ```yaml
-# Example GitHub Actions workflow
-- name: Run Tests
-  run: |
-    npm install
-    npm run test:coverage
-    npm run test:contracts
+name: MVP Tests
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Run MVP contract tests
+        run: npm run test:contracts:mvp
+      
+      - name: Run MVP backend tests
+        run: npm run test:unit:current
+      
+      - name: Run integration tests
+        run: npx jest tests/integration/mvp-integration.test.js
 ```
 
-## Contributing
+### Pre-commit Hooks
 
-When adding new tests:
+```json
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run test:mvp"
+    }
+  }
+}
+```
 
-1. Follow existing naming conventions
-2. Add appropriate setup/teardown
-3. Include both positive and negative test cases
-4. Update this README if adding new test categories
-5. Ensure tests are deterministic and isolated
+## 📚 Test Documentation
+
+### Test File Documentation
+
+Each test file includes comprehensive documentation:
+
+```javascript
+/**
+ * @fileoverview MVP BlockchainSyncService Unit Tests
+ * @description Tests for the blockchain data synchronization service
+ * @author Monowave Team
+ * @since MVP v1.0.0
+ */
+
+describe('BlockchainSyncService', () => {
+  // Test implementation
+});
+```
+
+### Test Case Documentation
+
+```javascript
+it('should sync participant data successfully', async () => {
+  // Given: Mock blockchain service with participant data
+  // When: Sync operation is triggered
+  // Then: Database cache is updated with correct data
+});
+```
+
+## 🎯 Testing Best Practices
+
+### 1. Test Organization
+- **Arrange-Act-Assert**: Clear test structure
+- **Descriptive Names**: Self-documenting test names
+- **Single Responsibility**: One assertion per test
+- **Independent Tests**: No test dependencies
+
+### 2. Mocking Strategy
+- **External Services**: Mock blockchain, database connections
+- **Deterministic Results**: Consistent test outcomes
+- **Isolation**: Test units in isolation
+- **Real Integration**: Use real services for integration tests
+
+### 3. Coverage Goals
+- **Unit Tests**: 90%+ code coverage
+- **Integration Tests**: Critical path coverage
+- **Contract Tests**: 100% function coverage
+- **End-to-End**: Complete user journey coverage
+
+---
+
+**Monowave MVP Test Suite** - Comprehensive testing for reliable, scalable blockchain infrastructure.

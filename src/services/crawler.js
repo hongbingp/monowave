@@ -5,7 +5,7 @@ const logger = require('../utils/logger');
 
 class CrawlerService {
   constructor() {
-    this.userAgent = 'AdChain-Crawler/1.0';
+    this.userAgent = 'Monowave-Crawler/1.0';
     this.timeout = 30000;
   }
 

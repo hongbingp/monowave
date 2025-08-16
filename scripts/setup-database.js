@@ -14,9 +14,9 @@ async function setupDatabase() {
     logger.info('Database setup completed successfully!');
     logger.info('Tables created:');
     logger.info('  - users (enhanced with user_type and status)');
-    logger.info('  - publishers (mirrors PublisherRegistry contract)');
-    logger.info('  - ai_searchers (mirrors AISearcherRegistry contract)');
-    logger.info('  - advertisers (mirrors AdvertiserRegistry contract)');
+    logger.info('  - publishers (cached from ParticipantRegistry MVP contract)');
+    logger.info('  - ai_searchers (cached from ParticipantRegistry MVP contract)');
+    logger.info('  - advertisers (cached from ParticipantRegistry MVP contract)');
     logger.info('  - ad_campaigns (mirrors AdCampaign struct)');
     logger.info('  - api_keys (enhanced with contract fields)');
     logger.info('  - usage_logs (enhanced with user_profile and content_signals)');

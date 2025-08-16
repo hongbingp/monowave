@@ -115,3 +115,12 @@ deployment-modular.json
 
 # PM2
 .pm2/
+
+
+# claude
+./claude
+CLAUDE.md
+
+
+
+address.md

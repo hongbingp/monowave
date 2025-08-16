@@ -3,7 +3,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 
-console.log('🚀 Starting AdChain Test Suite...\n');
+console.log('🚀 Starting Monowave Test Suite...\n');
 
 async function runTests() {
   try {

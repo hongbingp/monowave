@@ -504,12 +504,215 @@ describe('API Integration Tests', () => {
   });
 
   describe('GET /health', () => {
-    it('should return health status', async () => {
+    it('should return health status with MVP info', async () => {
+      // Mock config service
+      jest.doMock('../../src/services/configService', () => ({
+        getConfigSummary: jest.fn().mockResolvedValue({
+          batching: { batchSize: 100, batchTimeout: 30000 },
+          revenue: { platformFeeBps: 200 },
+          participants: { autoRegister: true },
+          sync: { enabled: true, intervalMinutes: 5 }
+        })
+      }));
+
       const response = await request(app).get('/health');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('status', 'ok');
       expect(response.body).toHaveProperty('timestamp');
+      expect(response.body).toHaveProperty('mvp');
+    });
+  });
+
+  // MVP API Tests
+  describe('MVP API Endpoints', () => {
+    describe('POST /api/v1/pay/escrow/deposit', () => {
+      it('should deposit to escrow successfully', async () => {
+        mockPool.query.mockResolvedValue({
+          rows: [{ 
+            id: 1, 
+            email: 'test@example.com',
+            wallet_address: '0x123456789abcdef',
+            balance: 100.0,
+            plan_id: 1
+          }]
+        });
+
+        const response = await request(app)
+          .post('/api/v1/pay/escrow/deposit')
+          .set('X-API-Key', testApiKey)
+          .send({
+            amount: 50.0,
+            token: 'USDC'
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body.code).toBe('SUCCESS');
+        expect(response.body.data).toHaveProperty('escrow');
+      });
+
+      it('should require API key', async () => {
+        const response = await request(app)
+          .post('/api/v1/pay/escrow/deposit')
+          .send({
+            amount: 50.0,
+            token: 'USDC'
+          });
+
+        expect(response.status).toBe(401);
+        expect(response.body.code).toBe('UNAUTHORIZED');
+      });
+
+      it('should validate amount', async () => {
+        const response = await request(app)
+          .post('/api/v1/pay/escrow/deposit')
+          .set('X-API-Key', testApiKey)
+          .send({
+            amount: -10.0,
+            token: 'USDC'
+          });
+
+        expect(response.status).toBe(400);
+        expect(response.body.code).toBe('VALIDATION_ERROR');
+      });
+    });
+
+    describe('GET /api/v1/pay/escrow/balance', () => {
+      it('should get escrow balance successfully', async () => {
+        mockPool.query.mockResolvedValue({
+          rows: [{ 
+            id: 1, 
+            email: 'test@example.com',
+            wallet_address: '0x123456789abcdef',
+            balance: 100.0
+          }]
+        });
+
+        const response = await request(app)
+          .get('/api/v1/pay/escrow/balance')
+          .set('X-API-Key', testApiKey);
+
+        expect(response.status).toBe(200);
+        expect(response.body.code).toBe('SUCCESS');
+        expect(response.body.data).toHaveProperty('walletBalance');
+        expect(response.body.data).toHaveProperty('escrowBalance');
+      });
+
+      it('should require API key', async () => {
+        const response = await request(app)
+          .get('/api/v1/pay/escrow/balance');
+
+        expect(response.status).toBe(401);
+        expect(response.body.code).toBe('UNAUTHORIZED');
+      });
+    });
+
+    describe('GET /api/v1/stats/batches', () => {
+      it('should get batch processing stats', async () => {
+        // Mock batch stats queries
+        mockPool.query
+          .mockResolvedValueOnce({ rows: [{ total: '100', pending: '10' }] }) // ad_transactions
+          .mockResolvedValueOnce({ rows: [{ total: '50', pending: '5' }] }) // revenue_distributions
+          .mockResolvedValueOnce({ rows: [{ count: '2' }] }); // recent batches
+
+        const response = await request(app)
+          .get('/api/v1/stats/batches')
+          .set('X-API-Key', testApiKey);
+
+        expect(response.status).toBe(200);
+        expect(response.body.code).toBe('SUCCESS');
+        expect(response.body.data).toHaveProperty('adTransactionBatches');
+        expect(response.body.data).toHaveProperty('revenueBatches');
+        expect(response.body.data).toHaveProperty('pendingStats');
+      });
+
+      it('should require API key', async () => {
+        const response = await request(app)
+          .get('/api/v1/stats/batches');
+
+        expect(response.status).toBe(401);
+        expect(response.body.code).toBe('UNAUTHORIZED');
+      });
+    });
+
+    describe('Enhanced crawl endpoint with MVP features', () => {
+      it('should include MVP batch processing info in response', async () => {
+        axios.get.mockResolvedValue({ 
+          data: '<html><head><title>Test</title></head><body>Test content</body></html>' 
+        });
+
+        // Mock user lookup
+        mockPool.query.mockResolvedValue({
+          rows: [{ 
+            id: 1, 
+            email: 'test@example.com',
+            wallet_address: '0x123456789abcdef',
+            balance: 100.0,
+            user_type: 'ai_searcher'
+          }]
+        });
+
+        const response = await request(app)
+          .post('/api/v1/crawl')
+          .set('X-API-Key', testApiKey)
+          .send({
+            urls: ['https://example.com'],
+            format: 'structured'
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body.code).toBe('SUCCESS');
+        expect(response.body).toHaveProperty('mvpBatchProcessing');
+        expect(response.body).toHaveProperty('contractAddresses');
+      });
+
+      it('should handle MVP batch processing errors gracefully', async () => {
+        axios.get.mockResolvedValue({ 
+          data: '<html><head><title>Test</title></head><body>Test content</body></html>' 
+        });
+
+        // Mock user lookup
+        mockPool.query.mockResolvedValue({
+          rows: [{ 
+            id: 1, 
+            email: 'test@example.com',
+            wallet_address: '0x123456789abcdef',
+            balance: 100.0,
+            user_type: 'ai_searcher'
+          }]
+        });
+
+        const response = await request(app)
+          .post('/api/v1/crawl')
+          .set('X-API-Key', testApiKey)
+          .send({
+            urls: ['https://example.com'],
+            format: 'structured'
+          });
+
+        expect(response.status).toBe(200);
+        expect(response.body.code).toBe('SUCCESS');
+        // Should still succeed even if blockchain services are unavailable in tests
+      });
+    });
+
+    describe('Enhanced stats endpoint with MVP features', () => {
+      it('should include MVP contract addresses in platform stats', async () => {
+        // Mock stats queries
+        mockPool.query
+          .mockResolvedValueOnce({ rows: [{ count: '100' }] }) // total users
+          .mockResolvedValueOnce({ rows: [{ count: '50' }] }) // active users
+          .mockResolvedValueOnce({ rows: [{ sum: '1000.50' }] }); // total revenue
+
+        const response = await request(app)
+          .get('/api/v1/stats/platform')
+          .set('X-API-Key', testApiKey);
+
+        expect(response.status).toBe(200);
+        expect(response.body.code).toBe('SUCCESS');
+        expect(response.body.data).toHaveProperty('blockchainService');
+        expect(response.body.data).toHaveProperty('contractAddresses');
+      });
     });
   });
 });

@@ -144,17 +144,9 @@ describe('AuthService', () => {
 
     it('should return null for expired API key', async () => {
       const apiKey = 'test_123456789';
-      const hash = await AuthService.hashApiKey(apiKey);
       
-      const mockResult = {
-        rows: [{
-          id: 1,
-          key_hash: hash,
-          user_id: 1,
-          plan_id: 1,
-          expires_at: new Date('2020-01-01') // Expired
-        }]
-      };
+      // Mock empty result since expired keys are filtered out by the query
+      const mockResult = { rows: [] };
       pool.query.mockResolvedValue(mockResult);
 
       const result = await AuthService.validateApiKey(apiKey);

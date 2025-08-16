@@ -4,9 +4,9 @@ describe('Simple Test', () => {
   });
 
   it('should test string operations', () => {
-    const str = 'AdChain';
-    expect(str).toBe('AdChain');
-    expect(str.length).toBe(7);
+    const str = 'Monowave';
+    expect(str).toBe('Monowave');
+    expect(str.length).toBe(8);
   });
 
   it('should test async operations', async () => {

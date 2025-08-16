@@ -18,7 +18,7 @@ const logger = winston.createLogger({
       )
     }),
     new DailyRotateFile({
-      filename: process.env.LOG_FILE_PATH || 'logs/adchain-%DATE%.log',
+      filename: process.env.LOG_FILE_PATH || 'logs/monowave-%DATE%.log',
       datePattern: 'YYYY-MM-DD',
       zippedArchive: true,
       maxSize: '20m',
