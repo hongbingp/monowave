@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 
-require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
+import { config as dotenvConfig } from 'dotenv';
+dotenvConfig();
+import fs from 'fs';
+import path from 'path';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
 const logger = require('../src/utils/logger');
 
 class DeploymentConfigValidator {
@@ -333,8 +336,8 @@ async function main() {
 }
 
 // Run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
 
-module.exports = { DeploymentConfigValidator };
+export { DeploymentConfigValidator };

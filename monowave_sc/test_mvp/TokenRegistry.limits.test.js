@@ -1,10 +1,13 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import hre from "hardhat";
+
+// Get network connection and ethers object using top-level await
+const { ethers } = await hre.network.connect();
 
 describe("TokenRegistry - limits", function () {
   it("enforces single and daily limits", async function () {
     const [admin, user] = await ethers.getSigners();
-    const AccessControl = await ethers.getContractFactory("contracts/AccessControl.sol:AccessControl");
+    const AccessControl = await ethers.getContractFactory("AccessControl");
     const access = await AccessControl.deploy(admin.address);
     await access.waitForDeployment();
 
@@ -31,10 +34,10 @@ describe("TokenRegistry - limits", function () {
     await expect(reg.checkAndConsume(await usdc.getAddress(), user.address, ethers.parseUnits("6", 6)))
       .to.be.revertedWith("TR: exceeds single max");
     // two calls within daily limit 8
-    await expect(reg.checkAndConsume(await usdc.getAddress(), user.address, ethers.parseUnits("5", 6))).to.not.be
-      .reverted;
-    await expect(reg.checkAndConsume(await usdc.getAddress(), user.address, ethers.parseUnits("3", 6))).to.not.be
-      .reverted;
+    await expect(reg.checkAndConsume(await usdc.getAddress(), user.address, ethers.parseUnits("5", 6))).to.not
+      .revert(ethers);
+    await expect(reg.checkAndConsume(await usdc.getAddress(), user.address, ethers.parseUnits("3", 6))).to.not
+      .revert(ethers);
     // exceeding daily
     await expect(reg.checkAndConsume(await usdc.getAddress(), user.address, ethers.parseUnits("1", 6)))
       .to.be.revertedWith("TR: exceeds daily max");

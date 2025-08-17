@@ -10,6 +10,7 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.development
 
 # Logs
 logs/
@@ -28,7 +29,6 @@ coverage/
 .nyc_output
 
 # Dependency directories
-node_modules/
 jspm_packages/
 
 # TypeScript cache
@@ -67,7 +67,6 @@ jspm_packages/
 dist
 
 # Gatsby files
-.cache/
 public
 
 # Storybook build outputs
@@ -94,7 +93,7 @@ temp/
 ehthumbs.db
 Thumbs.db
 
-# Hardhat files
+# Hardhat and Smart Contract files
 cache/
 artifacts/
 contracts/cache/
@@ -102,25 +101,26 @@ contracts/artifacts/
 contracts/typechain/
 contracts/typechain-types/
 contracts/deployment.json
+monowave_sc/cache/
+monowave_sc/artifacts/
+monowave_sc/types/
+monowave_sc/typechain/
+monowave_sc/typechain-types/
 deployment-modular.json
+deployment-mvp.json
 !deployment-example.json
 
-# Local development
-.env.local
-.env.development
-
-# Database
+# Database files
 *.db
 *.sqlite
+dump.rdb
 
 # PM2
 .pm2/
 
-
-# claude
+# Claude AI assistant files
 ./claude
-CLAUDE.md
 
-
-
-address.md
+# Documentation files (except README.md)
+*.md
+!README.md

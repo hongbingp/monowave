@@ -1,5 +1,8 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import hre from "hardhat";
+
+// Get network connection and ethers object using top-level await
+const { ethers } = await hre.network.connect();
 
 describe("BatchLedger - idempotent commits", function () {
   it("rejects duplicate batchId", async function () {
@@ -9,7 +12,7 @@ describe("BatchLedger - idempotent commits", function () {
     const usdc = await MockUSDC.deploy();
     await usdc.waitForDeployment();
 
-    const AccessControl = await ethers.getContractFactory("contracts/AccessControl.sol:AccessControl");
+    const AccessControl = await ethers.getContractFactory("AccessControl");
     const access = await AccessControl.deploy(admin.address);
     await access.waitForDeployment();
 

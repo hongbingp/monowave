@@ -1,6 +1,7 @@
-const { ethers } = require("hardhat");
-const fs = require("fs");
-const path = require("path");
+import hre from "hardhat";
+const { ethers } = await hre.network.connect();
+import fs from "fs";
+import path from "path";
 
 async function main() {
   console.log("🚀 Deploying MVP stack (AccessControl + Registries + Escrow + Ledger + Distributor)...\n");

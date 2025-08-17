@@ -4,8 +4,8 @@ const logger = require('../utils/logger');
 const crypto = require('crypto');
 
 // Import MVP contract ABIs
-const BatchLedgerABI = require('../../contracts/artifacts/contracts/BatchLedger.sol/BatchLedger.json').abi;
-const DistributorABI = require('../../contracts/artifacts/contracts/Distributor.sol/Distributor.json').abi;
+const BatchLedgerABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/BatchLedger.sol/BatchLedger.json').abi;
+const DistributorABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/Distributor.sol/Distributor.json').abi;
 
 class AdTransactionService {
   constructor() {

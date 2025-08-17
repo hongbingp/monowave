@@ -1,5 +1,8 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
+import { expect } from "chai";
+import hre from "hardhat";
+
+// Get network connection and ethers object using top-level await
+const { ethers } = await hre.network.connect();
 
 describe("MockUSDC", function () {
   let MockUSDC;
