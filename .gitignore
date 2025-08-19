@@ -120,7 +120,12 @@ dump.rdb
 
 # Claude AI assistant files
 .claude/
-./github
+.github/
+
+
 # Documentation files (except README.md)
 *.md
 !README.md
+
+
+eslint.config.js
