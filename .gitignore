@@ -119,8 +119,8 @@ dump.rdb
 .pm2/
 
 # Claude AI assistant files
-./claude
-
+.claude/
+./github
 # Documentation files (except README.md)
 *.md
 !README.md
