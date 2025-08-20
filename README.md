@@ -1,7 +1,7 @@
 # monowave - on-chain Ad system for AI apps
 
 <div align="center">
-  <img src="images/logo_4x.png" alt="Monowave Logo" width="200">
+  <img src="images/logo_4x.png" alt="Monowave Logo" width="500">
 </div>
 
 Monowave is a modular blockchain platform that bridges content publishers with AI platforms and facilitates transparent, scalable advertising revenue settlement using advanced smart contract architecture.
