@@ -1,4 +1,8 @@
-# monowave - AI Content Authorization & Advertising Settlement Platform
+# monowave - on-chain Ad system for AI apps
+
+<div align="center">
+  <img src="images/logo_4x.png" alt="Monowave Logo" width="200">
+</div>
 
 Monowave is a modular blockchain platform that bridges content publishers with AI platforms and facilitates transparent, scalable advertising revenue settlement using advanced smart contract architecture.
 
@@ -180,7 +184,6 @@ npm run test:integration
 
 - **Local**: Hardhat Network (chainId: 1337)
 - **Testnet**: Base Sepolia (chainId: 84532)
-- **Mainnet**: Base (chainId: 8453)
 
 ---
 
