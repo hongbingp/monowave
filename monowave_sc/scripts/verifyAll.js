@@ -1,4 +1,5 @@
-const { ethers, run } = require("hardhat");
+import hre from "hardhat";
+const { ethers, run } = await hre.network.connect();
 
 const EIP1967_IMPL_SLOT = "0x360894A13BA1A3210667C828492DB98DCA3E2076CC3735A920A3CA505D382BBC";
 

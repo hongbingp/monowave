@@ -1,15 +1,39 @@
-const { ethers } = require("hardhat");
+import hre from "hardhat";
+const { ethers } = await hre.network.connect();
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function main() {
+  // Load deployment addresses
+  const deploymentPath = path.resolve(__dirname, "../../deployment-mvp.json");
+  let deployment;
+  try {
+    const deploymentData = fs.readFileSync(deploymentPath, "utf8");
+    deployment = JSON.parse(deploymentData);
+  } catch (error) {
+    console.error("Failed to load deployment file:", deploymentPath);
+    console.error("Please run deployment first: npm run deploy:base-sepolia");
+    process.exit(1);
+  }
+
   const addresses = {
-    access: process.env.ACCESS || "0x7F5100B88e0E55D7D2b22844fC8cC80aadeEEF82",
-    tokenRegistry: process.env.TOKEN_REG || "0x7dA2b55BBAd825177c9d978dD6bbeaB085e0BF99",
-    participantRegistry: process.env.PART_REG || "0x4c7d50000f02c6F4F0Afc94D6EFe7EBDf5904765",
-    batchLedger: process.env.LEDGER || "0x322d1ad82664e1b22fA813a0CDfB44c02cbA2832",
-    escrow: process.env.ESCROW || "0xb54b32AC2Ef06E5bD4E03121D0023d5d41BC63fA",
-    distributor: process.env.DIST || "0x3fEC9A964F421E8D1C3a2B4D57E925f9d6e75654",
-    usdc: process.env.USDC || "0x1cF6f62197703876C13AD64039A3dFC5cB5839F8",
+    access: deployment.contracts.AccessControl,
+    tokenRegistry: deployment.contracts.TokenRegistry,
+    participantRegistry: deployment.contracts.ParticipantRegistry,
+    batchLedger: deployment.contracts.BatchLedger,
+    escrow: deployment.contracts.Escrow,
+    distributor: deployment.contracts.Distributor,
+    usdc: deployment.contracts.MockUSDC,
   };
+
+  console.log("Using deployed contract addresses from:", deploymentPath);
+  console.log("Network:", deployment.network);
+  console.log("Deployed at:", deployment.timestamp);
 
   const [signer] = await ethers.getSigners();
   console.log("Operator:", signer.address);

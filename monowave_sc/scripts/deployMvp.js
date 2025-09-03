@@ -2,6 +2,11 @@ import hre from "hardhat";
 const { ethers } = await hre.network.connect();
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 async function main() {
   console.log("🚀 Deploying MVP stack (AccessControl + Registries + Escrow + Ledger + Distributor)...\n");
@@ -20,7 +25,7 @@ async function main() {
   console.log("✅ MockUSDC:", deployment.contracts.MockUSDC);
 
   // 2) AccessControl
-  const AccessControl = await ethers.getContractFactory("contracts/AccessControl.sol:AccessControl");
+  const AccessControl = await ethers.getContractFactory("AccessControl");
   const access = await AccessControl.deploy(deployer.address);
   await access.waitForDeployment();
   deployment.contracts.AccessControl = await access.getAddress();
@@ -48,7 +53,7 @@ async function main() {
   const tokenRegistryImpl = await TokenRegistry.deploy();
   await tokenRegistryImpl.waitForDeployment();
   const initTR = TokenRegistry.interface.encodeFunctionData("initialize", [await access.getAddress()]);
-  const Proxy = await ethers.getContractFactory("@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol:ERC1967Proxy");
+  const Proxy = await ethers.getContractFactory("ProxyImporter");
   const trProxy = await Proxy.deploy(await tokenRegistryImpl.getAddress(), initTR);
   await trProxy.waitForDeployment();
   const tokenRegistry = await ethers.getContractAt("TokenRegistry", await trProxy.getAddress());
