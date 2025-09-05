@@ -1,13 +1,13 @@
-const express = require('express');
-const {
+import express from 'express';
+import {
   getUsage,
   getBilling,
   createPlan,
   createApiKey,
   deactivateApiKey,
   getApiKeys
-} = require('../controllers/adminController');
-const { authenticateJWT } = require('../middleware/auth');
+} from '../controllers/adminController.js';
+import { authenticateJWT } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -18,4 +18,4 @@ router.post('/apikey', authenticateJWT, createApiKey);
 router.delete('/apikey/:keyId', authenticateJWT, deactivateApiKey);
 router.get('/apikeys', authenticateJWT, getApiKeys);
 
-module.exports = router;
+export default router;

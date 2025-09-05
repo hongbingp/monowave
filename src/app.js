@@ -1,20 +1,21 @@
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { config } from 'dotenv';
+config();
 
-const logger = require('./utils/logger');
-const { connectDB } = require('./config/database');
-const { connectRedis } = require('./config/redis');
-const errorHandler = require('./middleware/errorHandler');
-const BlockchainSyncService = require('./services/blockchainSyncService');
-const configService = require('./services/configService');
+import logger from './utils/logger.js';
+import { connectDB } from './config/database.js';
+import { connectRedis } from './config/redis.js';
+import errorHandler from './middleware/errorHandler.js';
+import BlockchainSyncService from './services/blockchainSyncService.js';
+import configService from './services/configService.js';
 
-const crawlRoutes = require('./routes/crawl');
-const adminRoutes = require('./routes/admin');
-const payRoutes = require('./routes/pay');
-const statsRoutes = require('./routes/stats');
+import crawlRoutes from './routes/crawl.js';
+import adminRoutes from './routes/admin.js';
+import payRoutes from './routes/pay.js';
+import statsRoutes from './routes/stats.js';
 
 const app = express();
 
@@ -130,7 +131,7 @@ async function gracefulShutdown(signal) {
     }
     
     // Close database pool
-    const { pool } = require('./config/database');
+    const { pool } = await import('./config/database.js');
     await pool.end();
     logger.info('Database connections closed');
     
@@ -144,4 +145,4 @@ async function gracefulShutdown(signal) {
 
 startServer();
 
-module.exports = app;
+export default app;

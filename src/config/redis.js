@@ -1,5 +1,5 @@
-const redis = require('redis');
-const logger = require('../utils/logger');
+import redis from 'redis';
+import logger from '../utils/logger.js';
 
 const client = redis.createClient({
   host: process.env.REDIS_HOST || 'localhost',
@@ -92,4 +92,4 @@ class RateLimiter {
   }
 }
 
-module.exports = { client, connectRedis, RateLimiter };
+export { client, connectRedis, RateLimiter };

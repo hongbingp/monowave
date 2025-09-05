@@ -1,7 +1,7 @@
-const crypto = require('crypto');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { pool } = require('../config/database');
+import crypto from 'crypto';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { pool } from '../config/database.js';
 
 class AuthService {
   static generateApiKey() {
@@ -91,4 +91,4 @@ class AuthService {
   }
 }
 
-module.exports = AuthService;
+export default AuthService;

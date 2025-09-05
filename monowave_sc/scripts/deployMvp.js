@@ -1,5 +1,5 @@
 import hre from "hardhat";
-const { ethers } = await hre.network.connect();
+const { ethers, upgrades } = hre;
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -50,13 +50,8 @@ async function main() {
 
   // 3) TokenRegistry
   const TokenRegistry = await ethers.getContractFactory("TokenRegistry");
-  const tokenRegistryImpl = await TokenRegistry.deploy();
-  await tokenRegistryImpl.waitForDeployment();
-  const initTR = TokenRegistry.interface.encodeFunctionData("initialize", [await access.getAddress()]);
-  const Proxy = await ethers.getContractFactory("ProxyImporter");
-  const trProxy = await Proxy.deploy(await tokenRegistryImpl.getAddress(), initTR);
-  await trProxy.waitForDeployment();
-  const tokenRegistry = await ethers.getContractAt("TokenRegistry", await trProxy.getAddress());
+  const tokenRegistry = await upgrades.deployProxy(TokenRegistry, [await access.getAddress()]);
+  await tokenRegistry.waitForDeployment();
   deployment.contracts.TokenRegistry = await tokenRegistry.getAddress();
   console.log("✅ TokenRegistry:", deployment.contracts.TokenRegistry);
 
@@ -66,23 +61,15 @@ async function main() {
 
   // 4) ParticipantRegistry
   const ParticipantRegistry = await ethers.getContractFactory("ParticipantRegistry");
-  const participantsImpl = await ParticipantRegistry.deploy();
-  await participantsImpl.waitForDeployment();
-  const initPR = ParticipantRegistry.interface.encodeFunctionData("initialize", [await access.getAddress()]);
-  const prProxy = await Proxy.deploy(await participantsImpl.getAddress(), initPR);
-  await prProxy.waitForDeployment();
-  const participants = await ethers.getContractAt("ParticipantRegistry", await prProxy.getAddress());
+  const participants = await upgrades.deployProxy(ParticipantRegistry, [await access.getAddress()]);
+  await participants.waitForDeployment();
   deployment.contracts.ParticipantRegistry = await participants.getAddress();
   console.log("✅ ParticipantRegistry:", deployment.contracts.ParticipantRegistry);
 
   // 5) BatchLedger
   const BatchLedger = await ethers.getContractFactory("BatchLedger");
-  const ledgerImpl = await BatchLedger.deploy();
-  await ledgerImpl.waitForDeployment();
-  const initBL = BatchLedger.interface.encodeFunctionData("initialize", [await access.getAddress()]);
-  const blProxy = await Proxy.deploy(await ledgerImpl.getAddress(), initBL);
-  await blProxy.waitForDeployment();
-  const ledger = await ethers.getContractAt("BatchLedger", await blProxy.getAddress());
+  const ledger = await upgrades.deployProxy(BatchLedger, [await access.getAddress()]);
+  await ledger.waitForDeployment();
   deployment.contracts.BatchLedger = await ledger.getAddress();
   console.log("✅ BatchLedger:", deployment.contracts.BatchLedger);
 
@@ -90,23 +77,15 @@ async function main() {
 
   // 6) Escrow
   const Escrow = await ethers.getContractFactory("Escrow");
-  const escrowImpl = await Escrow.deploy();
-  await escrowImpl.waitForDeployment();
-  const initEsc = Escrow.interface.encodeFunctionData("initialize", [await access.getAddress(), await tokenRegistry.getAddress()]);
-  const escProxy = await Proxy.deploy(await escrowImpl.getAddress(), initEsc);
-  await escProxy.waitForDeployment();
-  const escrow = await ethers.getContractAt("Escrow", await escProxy.getAddress());
+  const escrow = await upgrades.deployProxy(Escrow, [await access.getAddress(), await tokenRegistry.getAddress()]);
+  await escrow.waitForDeployment();
   deployment.contracts.Escrow = await escrow.getAddress();
   console.log("✅ Escrow:", deployment.contracts.Escrow);
 
   // 7) Distributor
   const Distributor = await ethers.getContractFactory("Distributor");
-  const distributorImpl = await Distributor.deploy();
-  await distributorImpl.waitForDeployment();
-  const initDist = Distributor.interface.encodeFunctionData("initialize", [await access.getAddress(), await ledger.getAddress(), await escrow.getAddress()]);
-  const distProxy = await Proxy.deploy(await distributorImpl.getAddress(), initDist);
-  await distProxy.waitForDeployment();
-  const distributor = await ethers.getContractAt("Distributor", await distProxy.getAddress());
+  const distributor = await upgrades.deployProxy(Distributor, [await access.getAddress(), await ledger.getAddress(), await escrow.getAddress()]);
+  await distributor.waitForDeployment();
   deployment.contracts.Distributor = await distributor.getAddress();
   console.log("✅ Distributor:", deployment.contracts.Distributor);
 

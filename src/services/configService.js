@@ -1,5 +1,5 @@
-const { pool } = require('../config/database');
-const logger = require('../utils/logger');
+import { pool } from '../config/database.js';
+import logger from '../utils/logger.js';
 
 class ConfigService {
   constructor() {
@@ -281,4 +281,4 @@ class ConfigService {
 // Singleton instance
 const configService = new ConfigService();
 
-module.exports = configService;
+export default configService;

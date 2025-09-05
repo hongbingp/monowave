@@ -1,12 +1,12 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const {
+import {
   getPlatformStats,
   getUserStats,
   getRevenueReport,
   getAdTransactionReport,
   getBatchProcessingStats
-} = require('../controllers/statsController');
+} from '../controllers/statsController.js';
 
 // Platform statistics - overall system stats
 router.get('/platform', getPlatformStats);
@@ -25,4 +25,4 @@ router.get('/ad-transactions', getAdTransactionReport);
 // MVP batch processing statistics
 router.get('/batches', getBatchProcessingStats);
 
-module.exports = router;
+export default router;

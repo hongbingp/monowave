@@ -1,14 +1,16 @@
-const { Web3 } = require('web3');
-const { pool } = require('../config/database');
-const logger = require('../utils/logger');
+import { Web3 } from 'web3';
+import { pool } from '../config/database.js';
+import logger from '../utils/logger.js';
 
 // Import MVP contract ABIs
-const ParticipantRegistryABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/ParticipantRegistry.sol/ParticipantRegistry.json').abi;
-const BatchLedgerABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/BatchLedger.sol/BatchLedger.json').abi;
-const EscrowABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/Escrow.sol/Escrow.json').abi;
-const DistributorABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/Distributor.sol/Distributor.json').abi;
-const TokenRegistryABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/TokenRegistry.sol/TokenRegistry.json').abi;
-const MockUSDCABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/MockUSDC.sol/MockUSDC.json').abi;
+import {
+  ParticipantRegistryABI,
+  BatchLedgerABI,
+  EscrowABI,
+  DistributorABI,
+  TokenRegistryABI,
+  MockUSDCABI
+} from '../utils/contractABI.js';
 
 class BlockchainService {
   constructor() {
@@ -404,4 +406,4 @@ class BlockchainService {
   }
 }
 
-module.exports = BlockchainService;
+export default BlockchainService;

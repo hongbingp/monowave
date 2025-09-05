@@ -1,6 +1,6 @@
-const express = require('express');
-const { processPayment, getPaymentHistory, depositToEscrow, getEscrowBalance } = require('../controllers/payController');
-const { authenticateApiKey } = require('../middleware/auth');
+import express from 'express';
+import { processPayment, getPaymentHistory, depositToEscrow, getEscrowBalance } from '../controllers/payController.js';
+import { authenticateApiKey } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -11,4 +11,4 @@ router.get('/history', authenticateApiKey, getPaymentHistory);
 router.post('/escrow/deposit', authenticateApiKey, depositToEscrow);
 router.get('/escrow/balance', authenticateApiKey, getEscrowBalance);
 
-module.exports = router;
+export default router;

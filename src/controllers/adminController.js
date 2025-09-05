@@ -1,8 +1,8 @@
-const { pool } = require('../config/database');
-const BillingService = require('../services/billing');
-const AuthService = require('../utils/auth');
-const logger = require('../utils/logger');
-const Joi = require('joi');
+import { pool } from '../config/database.js';
+import BillingService from '../services/billing.js';
+import AuthService from '../utils/auth.js';
+import logger from '../utils/logger.js';
+import Joi from 'joi';
 
 const billingService = new BillingService();
 
@@ -318,11 +318,4 @@ async function getApiKeys(req, res) {
   }
 }
 
-module.exports = {
-  getUsage,
-  getBilling,
-  createPlan,
-  createApiKey,
-  deactivateApiKey,
-  getApiKeys
-};
+export { getUsage, getBilling, createPlan, createApiKey, deactivateApiKey, getApiKeys };;

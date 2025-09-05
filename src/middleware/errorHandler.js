@@ -1,4 +1,4 @@
-const logger = require('../utils/logger');
+import logger from '../utils/logger.js';
 
 function errorHandler(error, req, res, next) {
   logger.error('Unhandled error:', {
@@ -47,4 +47,4 @@ function errorHandler(error, req, res, next) {
   });
 }
 
-module.exports = errorHandler;
+export default errorHandler;

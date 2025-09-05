@@ -1,6 +1,6 @@
-const { Web3 } = require('web3');
-const { pool } = require('../config/database');
-const logger = require('../utils/logger');
+import { Web3 } from 'web3';
+import { pool } from '../config/database.js';
+import logger from '../utils/logger.js';
 
 class BillingService {
   constructor() {
@@ -214,4 +214,4 @@ class BillingService {
   }
 }
 
-module.exports = BillingService;
+export default BillingService;

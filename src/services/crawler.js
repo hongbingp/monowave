@@ -1,7 +1,7 @@
-const axios = require('axios');
-const cheerio = require('cheerio');
-const { URL } = require('url');
-const logger = require('../utils/logger');
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+import { URL } from 'url';
+import logger from '../utils/logger.js';
 
 class CrawlerService {
   constructor() {
@@ -140,4 +140,4 @@ class CrawlerService {
   }
 }
 
-module.exports = CrawlerService;
+export default CrawlerService;

@@ -1,12 +1,10 @@
-const { Web3 } = require('web3');
-const { pool } = require('../config/database');
-const logger = require('../utils/logger');
-const crypto = require('crypto');
+import { Web3 } from 'web3';
+import { pool } from '../config/database.js';
+import logger from '../utils/logger.js';
+import crypto from 'crypto';
 
 // Import MVP contract ABIs
-const DistributorABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/Distributor.sol/Distributor.json').abi;
-const EscrowABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/Escrow.sol/Escrow.json').abi;
-const BatchLedgerABI = require('../../monowave_sc/artifacts/monowave_sc/contracts/BatchLedger.sol/BatchLedger.json').abi;
+import { DistributorABI, EscrowABI, BatchLedgerABI } from '../utils/contractABI.js';
 
 class RevenueService {
   constructor() {
@@ -643,4 +641,4 @@ class RevenueService {
   }
 }
 
-module.exports = RevenueService;
+export default RevenueService;

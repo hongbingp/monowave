@@ -1,10 +1,10 @@
-const express = require('express');
-const { crawl } = require('../controllers/crawlController');
-const { authenticateApiKey } = require('../middleware/auth');
-const { checkRateLimit } = require('../middleware/rateLimit');
+import express from 'express';
+import { crawl } from '../controllers/crawlController.js';
+import { authenticateApiKey } from '../middleware/auth.js';
+import { checkRateLimit } from '../middleware/rateLimit.js';
 
 const router = express.Router();
 
 router.post('/', authenticateApiKey, checkRateLimit, crawl);
 
-module.exports = router;
+export default router;

@@ -1,8 +1,8 @@
-const { pool } = require('../config/database');
-const RevenueService = require('../services/revenueService');
-const AdTransactionService = require('../services/adTransactionService');
-const BlockchainService = require('../services/blockchainService');
-const logger = require('../utils/logger');
+import { pool } from '../config/database.js';
+import RevenueService from '../services/revenueService.js';
+import AdTransactionService from '../services/adTransactionService.js';
+import BlockchainService from '../services/blockchainService.js';
+import logger from '../utils/logger.js';
 
 const revenueService = new RevenueService();
 const adTransactionService = new AdTransactionService();
@@ -681,10 +681,4 @@ async function getPendingBatchStats() {
   }
 }
 
-module.exports = {
-  getPlatformStats,
-  getUserStats,
-  getRevenueReport,
-  getAdTransactionReport,
-  getBatchProcessingStats
-};
+export { getPlatformStats, getUserStats, getRevenueReport, getAdTransactionReport, getBatchProcessingStats };;

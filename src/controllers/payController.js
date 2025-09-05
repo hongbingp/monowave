@@ -1,8 +1,8 @@
-const BillingService = require('../services/billing');
-const BlockchainService = require('../services/blockchainService');
-const { pool } = require('../config/database');
-const logger = require('../utils/logger');
-const Joi = require('joi');
+import BillingService from '../services/billing.js';
+import BlockchainService from '../services/blockchainService.js';
+import { pool } from '../config/database.js';
+import logger from '../utils/logger.js';
+import Joi from 'joi';
 
 const billingService = new BillingService();
 const blockchainService = new BlockchainService();
@@ -364,9 +364,4 @@ async function getEscrowBalance(req, res) {
   }
 }
 
-module.exports = {
-  processPayment,
-  getPaymentHistory,
-  depositToEscrow,
-  getEscrowBalance
-};
+export { processPayment, getPaymentHistory, depositToEscrow, getEscrowBalance };;

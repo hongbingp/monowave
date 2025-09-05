@@ -1,5 +1,5 @@
-const { Pool } = require('pg');
-const logger = require('../utils/logger');
+import { Pool } from 'pg';
+import logger from '../utils/logger.js';
 
 const pool = new Pool({
   host: process.env.DB_HOST || 'localhost',
@@ -346,4 +346,4 @@ async function initializeTables() {
   }
 }
 
-module.exports = { pool, connectDB };
+export { pool, connectDB };

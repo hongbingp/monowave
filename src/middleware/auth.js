@@ -1,5 +1,5 @@
-const AuthService = require('../utils/auth');
-const logger = require('../utils/logger');
+import AuthService from '../utils/auth.js';
+import logger from '../utils/logger.js';
 
 async function authenticateApiKey(req, res, next) {
   try {
@@ -55,4 +55,4 @@ function authenticateJWT(req, res, next) {
   }
 }
 
-module.exports = { authenticateApiKey, authenticateJWT };
+export { authenticateApiKey, authenticateJWT };;

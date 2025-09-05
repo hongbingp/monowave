@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { AuthLogin } from '@/components/auth/AuthLogin';
 import { RoleBasedDashboard } from '@/components/auth/RoleBasedDashboard';
+import { LiveMetrics } from '@/components/demo/LiveMetrics';
 
 type UserRole = 'ai_searcher' | 'publisher' | 'advertiser';
 

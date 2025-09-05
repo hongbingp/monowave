@@ -1,6 +1,6 @@
-const { pool } = require('../config/database');
-const BlockchainService = require('./blockchainService');
-const logger = require('../utils/logger');
+import { pool } from '../config/database.js';
+import BlockchainService from './blockchainService.js';
+import logger from '../utils/logger.js';
 
 class BlockchainSyncService {
   constructor() {
@@ -439,4 +439,4 @@ class BlockchainSyncService {
   }
 }
 
-module.exports = BlockchainSyncService;
+export default BlockchainSyncService;

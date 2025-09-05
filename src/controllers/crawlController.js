@@ -1,10 +1,10 @@
-const CrawlerService = require('../services/crawler');
-const BlockchainService = require('../services/blockchainService');
-const RevenueService = require('../services/revenueService');
-const AdTransactionService = require('../services/adTransactionService');
-const { pool } = require('../config/database');
-const logger = require('../utils/logger');
-const Joi = require('joi');
+import CrawlerService from '../services/crawler.js';
+import BlockchainService from '../services/blockchainService.js';
+import RevenueService from '../services/revenueService.js';
+import AdTransactionService from '../services/adTransactionService.js';
+import { pool } from '../config/database.js';
+import logger from '../utils/logger.js';
+import Joi from 'joi';
 
 const crawlerService = new CrawlerService();
 const blockchainService = new BlockchainService();
@@ -333,4 +333,4 @@ async function getPublisherWalletForUrl(url) {
   }
 }
 
-module.exports = { crawl };
+export { crawl };;
