@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { AuthLogin } from '@/components/auth/AuthLogin';
 import { RoleBasedDashboard } from '@/components/auth/RoleBasedDashboard';
-import { LiveMetrics } from '@/components/demo/LiveMetrics';
 
 type UserRole = 'ai_searcher' | 'publisher' | 'advertiser';
 
@@ -39,6 +38,10 @@ export default function HomePage() {
     );
   }
   
-  // 显示登录页面
-  return <AuthLogin onLogin={handleLogin} />;
+  // 显示登录页面 - 不显示钱包连接
+  return (
+    <div>
+      <AuthLogin onLogin={handleLogin} />
+    </div>
+  );
 }

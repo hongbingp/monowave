@@ -14,7 +14,8 @@ import {
   DollarSign,
   Users,
   Globe,
-  TrendingUp
+  TrendingUp,
+  Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -41,6 +42,7 @@ interface SidebarProps {
 const ROLE_NAVIGATION = {
   ai_searcher: [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'wallet', label: 'Wallet', icon: Wallet },
     { id: 'transactions', label: 'Transactions', icon: CreditCard },
     { id: 'crawling', label: 'Crawling', icon: Zap },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -49,6 +51,7 @@ const ROLE_NAVIGATION = {
   ],
   publisher: [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'wallet', label: 'Wallet', icon: Wallet },
     { id: 'content', label: 'Content', icon: FileText },
     { id: 'revenue', label: 'Revenue', icon: DollarSign },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
@@ -57,6 +60,7 @@ const ROLE_NAVIGATION = {
   ],
   advertiser: [
     { id: 'dashboard', label: 'Dashboard', icon: Home },
+    { id: 'wallet', label: 'Wallet', icon: Wallet },
     { id: 'campaigns', label: 'Campaigns', icon: Target },
     { id: 'transactions', label: 'Transactions', icon: CreditCard },
     { id: 'performance', label: 'Performance', icon: TrendingUp },

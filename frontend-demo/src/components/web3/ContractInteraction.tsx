@@ -8,8 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CONTRACT_ADDRESSES, DEFAULT_CHAIN } from '@/lib/web3-config';
+import { TEST_ADDRESSES } from '@/lib/test-addresses';
 import { parseUnits, formatUnits } from 'viem';
-import { Activity, DollarSign, Send, Loader2 } from 'lucide-react';
+import { Activity, DollarSign, Send, Loader2, UserPlus } from 'lucide-react';
 
 // Mock USDC ABI (simplified for demo)
 const MOCK_USDC_ABI = [
@@ -28,6 +29,26 @@ const MOCK_USDC_ABI = [
     name: 'transfer',
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' }
+    ],
+    name: 'approve',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' }
+    ],
+    name: 'allowance',
+    outputs: [{ name: '', type: 'uint256' }],
+    stateMutability: 'view',
     type: 'function',
   },
   {
@@ -73,12 +94,67 @@ const ESCROW_ABI = [
   },
 ] as const;
 
+// ParticipantRegistry ABI (simplified)
+const PARTICIPANT_REGISTRY_ABI = [
+  {
+    inputs: [
+      { name: 'who', type: 'address' },
+      { name: 'roleBitmap', type: 'uint256' },
+      { name: 'payout', type: 'address' },
+      { name: 'meta', type: 'bytes32' }
+    ],
+    name: 'register',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'who', type: 'address' }],
+    name: 'isRegistered',
+    outputs: [{ name: '', type: 'bool' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [{ name: 'who', type: 'address' }],
+    name: 'get',
+    outputs: [
+      {
+        components: [
+          { name: 'payout', type: 'address' },
+          { name: 'roleBitmap', type: 'uint256' },
+          { name: 'status', type: 'uint8' },
+          { name: 'meta', type: 'bytes32' }
+        ],
+        name: '',
+        type: 'tuple',
+      }
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
+// Role constants
+const ROLES = {
+  ROLE_PUBLISHER: 1,    // 1 << 0
+  ROLE_ADVERTISER: 2,   // 1 << 1  
+  ROLE_AI_SEARCHER: 4   // 1 << 2
+};
+
+const TEST_ACCOUNTS = [
+  { name: 'AI_SEARCHER', address: TEST_ADDRESSES.AI_SEARCHER.address, role: ROLES.ROLE_AI_SEARCHER, meta: "0x0b2fa5ccdd63fafe1f4230d054b7d01e2364d57595e584fa2d6de178f8a650af" },
+  { name: 'PUBLISHER', address: TEST_ADDRESSES.PUBLISHER.address, role: ROLES.ROLE_PUBLISHER, meta: "0x27ab35ed20d9b6e191331ac7a5892fd0b6763b024c62acd0a0cc58483e1cd07b" },
+  { name: 'ADVERTISER', address: TEST_ADDRESSES.ADVERTISER.address, role: ROLES.ROLE_ADVERTISER, meta: "0xfe2e4e8a1af985bd55826f5d82be58efaf5f42d27412bfbc9e3aae644f6673fd" }
+];
+
 export function ContractInteraction() {
   const { address, isConnected } = useAccount();
   const [mintAmount, setMintAmount] = useState('100');
   const [transferAmount, setTransferAmount] = useState('10');
   const [transferTo, setTransferTo] = useState('');
   const [depositAmount, setDepositAmount] = useState('50');
+  const [depositStep, setDepositStep] = useState<'approve' | 'deposit' | 'idle'>('idle');
 
   const { writeContract, data: hash, isPending, error } = useWriteContract();
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
@@ -100,6 +176,15 @@ export function ContractInteraction() {
     abi: ESCROW_ABI,
     functionName: 'balanceOf',
     args: address ? [address, CONTRACT_ADDRESSES.baseSepolia.MockUSDC as `0x${string}`] : undefined,
+    query: { enabled: !!address },
+  });
+
+  // Read USDC allowance for Escrow
+  const { data: allowance, refetch: refetchAllowance } = useReadContract({
+    address: CONTRACT_ADDRESSES.baseSepolia.MockUSDC as `0x${string}`,
+    abi: MOCK_USDC_ABI,
+    functionName: 'allowance',
+    args: address ? [address, CONTRACT_ADDRESSES.baseSepolia.Escrow as `0x${string}`] : undefined,
     query: { enabled: !!address },
   });
 
@@ -125,9 +210,22 @@ export function ContractInteraction() {
     });
   };
 
+  const handleDepositApprove = async () => {
+    if (!depositAmount) return;
+    
+    setDepositStep('approve');
+    writeContract({
+      address: CONTRACT_ADDRESSES.baseSepolia.MockUSDC as `0x${string}`,
+      abi: MOCK_USDC_ABI,
+      functionName: 'approve',
+      args: [CONTRACT_ADDRESSES.baseSepolia.Escrow as `0x${string}`, parseUnits(depositAmount, 6)],
+    });
+  };
+
   const handleDeposit = async () => {
     if (!depositAmount) return;
     
+    setDepositStep('deposit');
     writeContract({
       address: CONTRACT_ADDRESSES.baseSepolia.Escrow as `0x${string}`,
       abi: ESCROW_ABI,
@@ -136,13 +234,33 @@ export function ContractInteraction() {
     });
   };
 
+  const handleRegisterAccount = async (account: typeof TEST_ACCOUNTS[0]) => {
+    writeContract({
+      address: CONTRACT_ADDRESSES.baseSepolia.ParticipantRegistry as `0x${string}`,
+      abi: PARTICIPANT_REGISTRY_ABI,
+      functionName: 'register',
+      args: [
+        account.address as `0x${string}`,
+        BigInt(account.role),
+        account.address as `0x${string}`, // payout address same as participant
+        account.meta as `0x${string}`
+      ],
+    });
+  };
+
   // Refresh balances when transaction is confirmed
   React.useEffect(() => {
     if (isConfirmed) {
       refetchUsdcBalance();
       refetchEscrowBalance();
+      refetchAllowance();
+      
+      // Reset deposit step after successful transaction
+      if (depositStep !== 'idle') {
+        setTimeout(() => setDepositStep('idle'), 2000);
+      }
     }
-  }, [isConfirmed, refetchUsdcBalance, refetchEscrowBalance]);
+  }, [isConfirmed, refetchUsdcBalance, refetchEscrowBalance, refetchAllowance, depositStep]);
 
   if (!isConnected) {
     return (
@@ -171,7 +289,7 @@ export function ContractInteraction() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <p className="text-sm font-medium text-blue-800">USDC Balance</p>
               <p className="text-2xl font-bold text-blue-900">
@@ -182,6 +300,12 @@ export function ContractInteraction() {
               <p className="text-sm font-medium text-green-800">Escrow Balance</p>
               <p className="text-2xl font-bold text-green-900">
                 {escrowBalance ? formatUnits(escrowBalance as bigint, 6) : '0'} USDC
+              </p>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <p className="text-sm font-medium text-purple-800">Escrow Allowance</p>
+              <p className="text-2xl font-bold text-purple-900">
+                {allowance ? formatUnits(allowance as bigint, 6) : '0'} USDC
               </p>
             </div>
           </div>
@@ -224,9 +348,29 @@ export function ContractInteraction() {
               )}
             </div>
             {error && (
-              <p className="text-red-500 text-sm mt-2">
-                Error: {error.message}
-              </p>
+              <div className="bg-red-50 border border-red-200 p-3 rounded-lg mt-2">
+                <p className="text-red-800 text-sm font-medium">Transaction Error:</p>
+                <p className="text-red-600 text-xs mt-1">{error.message}</p>
+                {error.message.includes('user rejected') && (
+                  <p className="text-red-500 text-xs mt-1">💡 User cancelled the transaction</p>
+                )}
+                {error.message.includes('insufficient funds') && (
+                  <p className="text-red-500 text-xs mt-1">💡 Insufficient balance or gas fees</p>
+                )}
+                {error.message.includes('TR: token not allowed') && (
+                  <p className="text-red-500 text-xs mt-1">💡 Token not allowed in TokenRegistry</p>
+                )}
+                {hash && (
+                  <a
+                    href={`https://sepolia.basescan.org/tx/${hash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-red-600 hover:underline text-xs block mt-2"
+                  >
+                    View failed transaction on BaseScan →
+                  </a>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
@@ -327,7 +471,7 @@ export function ContractInteraction() {
         <CardHeader>
           <CardTitle>Deposit to Escrow</CardTitle>
           <CardDescription>
-            Deposit USDC tokens to the escrow contract
+            Deposit USDC tokens to the escrow contract (2-step process)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -341,25 +485,115 @@ export function ContractInteraction() {
               placeholder="50"
             />
           </div>
-          <Button 
-            onClick={handleDeposit} 
-            disabled={isPending || isConfirming}
-            className="w-full"
-          >
-            {isPending || isConfirming ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <DollarSign className="mr-2 h-4 w-4" />
-                Deposit {depositAmount} USDC
-              </>
-            )}
-          </Button>
+          
+          {/* Show current allowance status */}
+          <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+            <p className="text-sm text-yellow-800">
+              <strong>Current Allowance:</strong> {allowance ? formatUnits(allowance as bigint, 6) : '0'} USDC
+            </p>
+            <p className="text-xs text-yellow-600 mt-1">
+              You need to approve the Escrow contract to spend your USDC tokens before depositing.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <Button 
+              onClick={handleDepositApprove} 
+              disabled={isPending || isConfirming}
+              variant="outline"
+            >
+              {isPending && depositStep === 'approve' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                <>
+                  1. Approve {depositAmount} USDC
+                </>
+              )}
+            </Button>
+            
+            <Button 
+              onClick={handleDeposit} 
+              disabled={isPending || isConfirming || !allowance || (allowance as bigint) < parseUnits(depositAmount || '0', 6)}
+            >
+              {isPending && depositStep === 'deposit' ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Depositing...
+                </>
+              ) : (
+                <>
+                  <DollarSign className="mr-2 h-4 w-4" />
+                  2. Deposit {depositAmount} USDC
+                </>
+              )}
+            </Button>
+          </div>
+          
+          {/* Instructions */}
+          <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded border">
+            <div className="font-medium mb-1">💡 Instructions:</div>
+            <div>1. Click "Approve" to allow Escrow contract to spend your USDC</div>
+            <div>2. Wait for approval confirmation</div>
+            <div>3. Click "Deposit" to transfer USDC to Escrow</div>
+          </div>
         </CardContent>
       </Card>
+
+      {/* Role Assignment - Only show for DEPLOYER */}
+      {address && address.toLowerCase() === TEST_ADDRESSES.DEPLOYER.address.toLowerCase() && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Role Assignment (DEPLOYER Only)
+            </CardTitle>
+            <CardDescription>
+              Register test accounts in ParticipantRegistry with their roles
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {TEST_ACCOUNTS.map((account) => (
+              <div key={account.address} className="border rounded-lg p-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="font-medium">{account.name}</div>
+                    <div className="text-sm text-gray-500">{account.address}</div>
+                    <div className="text-xs text-blue-600">Role Bitmap: {account.role}</div>
+                  </div>
+                  <Button 
+                    onClick={() => handleRegisterAccount(account)}
+                    disabled={isPending || isConfirming}
+                    size="sm"
+                  >
+                    {isPending || isConfirming ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Register
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            ))}
+            
+            <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+              <p className="text-sm text-yellow-800 font-medium">⚠️ Important:</p>
+              <p className="text-xs text-yellow-700 mt-1">
+                Only the DEPLOYER account ({TEST_ADDRESSES.DEPLOYER.address}) can register participants.
+                Make sure you are connected with the DEPLOYER wallet.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

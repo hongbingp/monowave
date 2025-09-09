@@ -1,11 +1,57 @@
 import { getDefaultConfig } from '@rainbow-me/rainbowkit';
 import { base, baseSepolia } from 'wagmi/chains';
+import { http } from 'wagmi';
+
+// 优化的RPC配置以减少连接问题
+const customBaseSepolia = {
+  ...baseSepolia,
+  rpcUrls: {
+    ...baseSepolia.rpcUrls,
+    default: {
+      http: ['https://sepolia.base.org'],
+    },
+    public: {
+      http: ['https://sepolia.base.org'],
+    },
+  },
+};
+
+// WalletConnect Project ID validation and fallback
+const getWalletConnectProjectId = (): string => {
+  const projectId = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID;
+  
+  if (!projectId) {
+    console.warn('⚠️  NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID not set, using fallback');
+    return '2f05ae7f1116030fde2d36508f472bfb';
+  }
+  
+  if (projectId === 'demo-project-id' || projectId.length < 32) {
+    console.warn('⚠️  Using demo or invalid WalletConnect Project ID');
+  }
+  
+  return projectId;
+};
 
 export const config = getDefaultConfig({
   appName: 'Monowave',
-  projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || 'demo-project-id',
-  chains: [baseSepolia, base],
-  ssr: true, // If your dApp uses server side rendering (SSR)
+  projectId: getWalletConnectProjectId(),
+  chains: [customBaseSepolia, base],
+  transports: {
+    [baseSepolia.id]: http('https://sepolia.base.org', {
+      batch: true,
+      fetchOptions: {
+        keepalive: true,
+      },
+      retryCount: 3,
+      retryDelay: 1000,
+    }),
+    [base.id]: http(),
+  },
+  ssr: true,
+  enableEmailLogin: false,
+  // 添加额外的连接配置
+  multiInjectedProviderDiscovery: false,
+  syncConnectedChain: true,
 });
 
 // Contract addresses from deployment

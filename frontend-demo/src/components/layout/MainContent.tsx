@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { AIAppDashboard } from '@/components/dashboards/AIAppDashboard';
 import { PublisherDashboard } from '@/components/dashboards/PublisherDashboard';
 import { AdvertiserDashboard } from '@/components/dashboards/AdvertiserDashboard';
+import { WalletView } from '@/components/wallet/WalletView';
 
 export type UserRole = 'ai_searcher' | 'publisher' | 'advertiser';
 
@@ -37,6 +38,11 @@ export function MainContent({ user, activeView }: MainContentProps) {
         default:
           return <div>Unknown user type</div>;
       }
+    }
+
+    // 如果是wallet视图，显示Wallet管理页面
+    if (activeView === 'wallet') {
+      return <WalletView user={user} />;
     }
 
     // 其他视图的占位符内容
