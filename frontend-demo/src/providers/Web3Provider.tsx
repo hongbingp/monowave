@@ -24,7 +24,7 @@ export function Web3Provider({ children }: Web3ProviderProps) {
           refetchOnWindowFocus: false,
           refetchOnReconnect: true,
           staleTime: 30000, // 30 seconds
-          cacheTime: 300000, // 5 minutes
+          gcTime: 300000, // 5 minutes
         },
         mutations: {
           retry: 1,

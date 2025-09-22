@@ -52,7 +52,7 @@ export function EventListener() {
         txHash: log.transactionHash || '',
         from: log.args.from || '',
         to: log.args.to || '',
-        value: formatUnits(log.args.value || 0n, 6)
+        value: formatUnits(log.args.value || BigInt(0), 6)
       }));
 
       setEvents(prev => [...newEvents, ...prev].slice(0, 20)); // Keep only last 20 events

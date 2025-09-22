@@ -48,7 +48,6 @@ export const config = getDefaultConfig({
     [base.id]: http(),
   },
   ssr: true,
-  enableEmailLogin: false,
   // 添加额外的连接配置
   multiInjectedProviderDiscovery: false,
   syncConnectedChain: true,

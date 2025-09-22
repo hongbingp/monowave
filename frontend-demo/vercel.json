@@ -11,14 +11,9 @@
   },
   "build": {
     "env": {
-      "NEXT_PUBLIC_API_URL": "@api_url",
-      "NEXT_PUBLIC_WS_URL": "@ws_url",
-      "NEXT_PUBLIC_MOCK_MODE": "@mock_mode"
-    }
-  },
-  "functions": {
-    "src/app/api/**/*.ts": {
-      "runtime": "nodejs18.x"
+      "NEXT_PUBLIC_API_URL": "https://api.monowave.com",
+      "NEXT_PUBLIC_WS_URL": "wss://api.monowave.com",
+      "NEXT_PUBLIC_MOCK_MODE": "true"
     }
   },
   "rewrites": [
